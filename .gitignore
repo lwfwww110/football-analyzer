@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.log
+*.tmp
+
+# Ngrok
+ngrok.exe
+ngrok.zip
+
+# Old versions
+football-analyzer.html
+football-analyzer-v4.html
+football-analyzer（GPT）-v4.html
+code（glm).html
+index.html
+
+# Documentation
+*.txt
+升级迭代建议.txt
+思路逻辑.txt
+系统存在问题及建议.txt
+API接入问题.txt
+NGROK验证.txt
+sportapi.txt
+胜平负主客场分离编码法.txt
