@@ -1,0 +1,3438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>足球量化分析系统 Pro v3.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f1419;
+      --bg-secondary: #1a2332;
+      --bg-card: #1e2a3a;
+      --bg-hover: #253447;
+      --accent-win: #00d97e;
+      --accent-draw: #f59e0b;
+      --accent-lose: #ef4444;
+      --accent-gold: #fbbf24;
+      --accent-blue: #3b82f6;
+      --text-primary: #e8eaed;
+      --text-secondary: #9aa0a6;
+      --text-muted: #5f6368;
+      --border-color: #2d3a4a;
+      --gradient-win: linear-gradient(135deg, #00d97e 0%, #00b368 100%);
+      --gradient-draw: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --gradient-lose: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      --gradient-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
+    
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-gold);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 18px;
+      color: #000;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .logo-text span { color: var(--accent-gold); }
+    
+    .header-nav {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .nav-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--accent-gold);
+    }
+    
+    .league-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    
+    .league-selector::-webkit-scrollbar { display: none; }
+    
+    .league-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    
+    .league-chip:hover, .league-chip.active {
+      background: var(--bg-hover);
+      border-color: var(--accent-gold);
+    }
+    
+    .league-chip.active { background: var(--gradient-gold); color: #000; }
+    
+    main { padding: 16px 0; }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+      }
+      
+      .header-nav {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      
+      .nav-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      
+      .logo-text {
+        font-size: 18px;
+      }
+      
+      .league-selector {
+        padding: 8px 0;
+        justify-content: flex-start;
+      }
+      
+      .league-chip {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
+      }
+      
+      .stat-card {
+        padding: 10px;
+      }
+      
+      .stat-value {
+        font-size: 20px;
+      }
+      
+      .stat-label {
+        font-size: 11px;
+      }
+      
+      .team-selector {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .team-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      
+      .match-teams {
+        flex-direction: column;
+        gap: 6px;
+      }
+      
+      .team-name {
+        font-size: 13px;
+        min-width: auto;
+      }
+      
+      .match-score {
+        font-size: 14px;
+      }
+      
+      .prediction-bars {
+        gap: 8px;
+      }
+      
+      .prediction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      
+      .prediction-label {
+        min-width: auto;
+      }
+      
+      .prediction-bar-container {
+        width: 100%;
+        height: 20px;
+      }
+      
+      .encoding-sequence {
+        gap: 3px;
+      }
+      
+      .encode-val {
+        padding: 3px 6px;
+        font-size: 12px;
+      }
+      
+      .card-header {
+        padding: 12px;
+      }
+      
+      .card-body {
+        padding: 12px;
+      }
+      
+      .card-title {
+        font-size: 14px;
+      }
+      
+      .section-title {
+        font-size: 13px;
+      }
+      
+      main {
+        padding: 12px 0;
+      }
+      
+      .container {
+        padding: 0 12px;
+      }
+      
+      .match-item {
+        padding: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .match-time {
+        min-width: auto;
+      }
+      
+      .match-status {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+      
+      .standings-table th, .standings-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+      }
+      
+      .standings-team {
+        gap: 6px;
+      }
+      
+      .team-logo {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .ai-input-area {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .ai-input {
+        width: 100%;
+      }
+      
+      .ai-send-btn {
+        width: 100%;
+      }
+      
+      .ai-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .analysis-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+      }
+      
+      .team-info {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header-nav {
+        gap: 4px;
+      }
+      
+      .nav-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+      
+      .logo-text {
+        font-size: 16px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      
+      .stat-value {
+        font-size: 18px;
+      }
+      
+      .team-selector {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .league-chip {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+      
+      .prediction-panel {
+        padding: 12px;
+      }
+      
+      .prediction-title {
+        font-size: 14px;
+      }
+      
+      .encoding-section {
+        padding: 12px;
+      }
+      
+      .encoding-title {
+        font-size: 13px;
+      }
+      
+      .segment-row {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px;
+      }
+      
+      .segment-range {
+        min-width: auto;
+      }
+      
+      .segment-bar {
+        width: 100%;
+        margin: 0;
+      }
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+    }
+    
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .card-title .icon { font-size: 18px; }
+    
+    .card-body { padding: 16px; }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .match-list { display: flex; flex-direction: column; gap: 8px; }
+    
+    .match-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .match-item:hover { background: var(--bg-hover); }
+    
+    .match-time {
+      min-width: 50px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .match-teams {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .team-name {
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      min-width: 80px;
+    }
+    
+    .match-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .score-value {
+      padding: 4px 10px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+    }
+    
+    .score-live { background: var(--accent-lose); color: #fff; animation: pulse 1.5s infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .match-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .status-live { background: var(--accent-lose); color: #fff; }
+    .status-upcoming { background: var(--bg-hover); color: var(--text-secondary); }
+    .status-finished { background: var(--bg-primary); color: var(--text-muted); }
+    
+    .team-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .team-btn {
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    
+    .team-btn:hover { background: var(--bg-hover); border-color: var(--accent-blue); }
+    .team-btn.selected { background: var(--gradient-blue); border-color: transparent; }
+    
+    .analysis-panel { margin-top: 16px; }
+    
+    .analysis-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .team-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .team-badge {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .team-details h3 { font-size: 18px; font-weight: 600; }
+    .team-details p { font-size: 13px; color: var(--text-secondary); }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .stat-value.win { color: var(--accent-win); }
+    .stat-value.draw { color: var(--accent-draw); }
+    .stat-value.lose { color: var(--accent-lose); }
+    .stat-value.gold { color: var(--accent-gold); }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    
+    .encoding-section {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .encoding-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .encoding-sequence {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+    }
+    
+    .encode-val {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    
+    .encode-pos { background: var(--accent-win); color: #000; }
+    .encode-neg { background: var(--accent-lose); color: #fff; }
+    .encode-zero { background: var(--text-muted); color: #fff; }
+    
+    .segment-analysis {
+      margin-top: 16px;
+    }
+    
+    .segment-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .segment-range {
+      min-width: 80px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .segment-sum {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      min-width: 40px;
+      text-align: center;
+    }
+    
+    .segment-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      margin: 0 12px;
+      overflow: hidden;
+    }
+    
+    .segment-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .prediction-panel {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-hover) 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    
+    .prediction-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .prediction-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .prediction-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .prediction-label {
+      min-width: 60px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .prediction-bar-container {
+      flex: 1;
+      height: 24px;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .prediction-bar-fill {
+      height: 100%;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: width 0.5s ease;
+    }
+    
+    .bar-win { background: var(--gradient-win); }
+    .bar-draw { background: var(--gradient-draw); }
+    .bar-lose { background: var(--gradient-lose); }
+    
+    .ai-panel {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid #0f3460;
+    }
+    
+    .ai-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid #0f3460;
+    }
+    
+    .ai-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .ai-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .ai-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .ai-content {
+      padding: 16px;
+      min-height: 200px;
+    }
+    
+    .ai-input-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    
+    .ai-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .ai-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .ai-send-btn {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .ai-send-btn:hover { transform: scale(1.02); }
+    
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .standings-table th, .standings-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .standings-table th {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      background: var(--bg-secondary);
+    }
+    
+    .standings-table td {
+      font-size: 13px;
+    }
+    
+    .standings-table tr:hover td { background: var(--bg-hover); }
+    
+    .standings-rank {
+      width: 40px;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+    
+    .standings-team {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .team-logo {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-hover);
+      border-radius: 50%;
+    }
+    
+    .standings-stats {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--gradient-gold);
+      color: #000;
+    }
+    
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
+    
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+    
+    .btn-secondary:hover { background: var(--bg-hover); }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: var(--bg-card);
+      border-radius: 16px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-title { font-size: 18px; font-weight: 600; }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .modal-body { padding: 20px; }
+    
+    .form-group { margin-bottom: 16px; }
+    
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 12px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 2000;
+      transition: transform 0.3s;
+    }
+    
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--accent-win); }
+    .toast.error { border-color: var(--accent-lose); }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: var(--accent-lose);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">FA</div>
+          <div class="logo-text"><span>FOOTBALL</span> ANALYZER</div>
+        </div>
+        <div class="header-nav">
+          <button class="nav-btn active" data-tab="live">实时比分</button>
+          <button class="nav-btn" data-tab="analysis">量化分析</button>
+          <button class="nav-btn" data-tab="standings">积分榜</button>
+          <button class="nav-btn" data-tab="ai">AI分析</button>
+          <button class="nav-btn" data-tab="ml">ML训练</button>
+        </div>
+      </div>
+      <div class="league-selector" id="leagueSelector">
+        <div class="league-chip active" data-league="PL">🇬🇧 英超</div>
+        <div class="league-chip" data-league="PD">🇪🇸 西甲</div>
+        <div class="league-chip" data-league="BL1">🇩🇪 德甲</div>
+        <div class="league-chip" data-league="SA">🇮🇹 意甲</div>
+        <div class="league-chip" data-league="FL1">🇫🇷 法甲</div>
+        <div class="league-chip" data-league="CL">🏆 欧冠</div>
+        <div class="league-chip" data-league="DED">🇳🇱 荷甲</div>
+        <div class="league-chip" data-league="PPL">🇵🇹 葡超</div>
+      </div>
+    </div>
+  </header>
+  
+  <main class="container">
+    <div id="liveTab" class="tab-content active">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">🔴</span> 进行中的比赛</div>
+            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          </div>
+          <div class="card-body">
+            <div id="liveMatches" class="match-list">
+              <div class="empty-state">
+                <div class="icon">⚽</div>
+                <p>暂无进行中的比赛</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">📅</span> 即将开始</div>
+          </div>
+          <div class="card-body">
+            <div id="upcomingMatches" class="match-list">
+              <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>加载中...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">📊</span> 最近完赛</div>
+        </div>
+        <div class="card-body">
+          <div id="finishedMatches" class="match-list">
+            <div class="loading">
+              <div class="loading-spinner"></div>
+              <span>加载中...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="analysisTab" class="tab-content">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">🏆</span> 选择球队</div>
+          </div>
+          <div class="card-body">
+            <div class="section-title">选择联赛和球队进行分析</div>
+            <div id="teamSelector" class="team-selector">
+              <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>加载球队列表...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="icon">📈</span> 量化分析</div>
+          </div>
+          <div class="card-body">
+            <div id="analysisContent">
+              <div class="empty-state">
+                <div class="icon">📊</div>
+                <p>请选择球队开始分析</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="standingsTab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🏆</span> 积分榜</div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div id="standingsContent">
+            <table class="standings-table">
+              <thead>
+                <tr>
+                  <th class="standings-rank">#</th>
+                  <th>球队</th>
+                  <th class="standings-stats">场</th>
+                  <th class="standings-stats">胜</th>
+                  <th class="standings-stats">平</th>
+                  <th class="standings-stats">负</th>
+                  <th class="standings-stats">积分</th>
+                </tr>
+              </thead>
+              <tbody id="standingsBody">
+                <tr>
+                  <td colspan="7" class="empty-state">加载中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="aiTab" class="tab-content">
+      <div class="card ai-panel">
+        <div class="ai-header">
+          <div class="ai-icon">🤖</div>
+          <div>
+            <div class="ai-title">AI 智能分析</div>
+            <div class="ai-subtitle">基于量化数据的智能预测</div>
+          </div>
+        </div>
+        <div class="ai-content">
+          <div id="aiResponse">
+            <div class="empty-state">
+              <div class="icon">🤖</div>
+              <p>选择球队后，AI将基于量化分析结果提供智能预测</p>
+              <p style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">AI功能需要配置API密钥</p>
+            </div>
+          </div>
+          <div class="ai-input-area">
+            <input type="text" class="ai-input" id="aiInput" placeholder="输入您的问题...">
+            <button class="ai-send-btn" id="aiSendBtn">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="mlTab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🧠</span> 机器学习训练模块</div>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--accent-purple);">📊 当前模型状态</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                <div style="font-size: 11px; color: var(--text-secondary);">训练数据量</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent-gold);" id="mlDataCount">0</div>
+              </div>
+              <div style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                <div style="font-size: 11px; color: var(--text-secondary);">模型准确率</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent-win);" id="mlAccuracy">-</div>
+              </div>
+              <div style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                <div style="font-size: 11px; color: var(--text-secondary);">模型状态</div>
+                <div style="font-size: 16px; font-weight: 700;" id="mlStatus">未训练</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">🔧 特征工程</div>
+            <div id="featureWeights" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">全场编码均值</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_encoding">1.00</span>
+              </div>
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">进球能力</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_goals">1.00</span>
+              </div>
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">主场优势</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_home">1.00</span>
+              </div>
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">近期状态</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_form">1.00</span>
+              </div>
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">大小球趋势</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_over">1.00</span>
+              </div>
+              <div style="padding: 10px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px;">实力系数</span>
+                <span style="font-weight: 600; color: var(--accent-gold);" id="weight_power">1.00</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">📈 训练控制</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button onclick="buildDataset()" style="flex: 1; padding: 12px 20px; background: var(--accent-blue); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">构建数据集</button>
+              <button onclick="trainModel()" style="flex: 1; padding: 12px 20px; background: var(--accent-gold); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">训练模型</button>
+              <button onclick="validateModel()" style="flex: 1; padding: 12px 20px; background: var(--accent-win); color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">验证模型</button>
+            </div>
+          </div>
+          
+          <div id="mlLog" style="background: var(--bg-primary); border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--text-secondary);">
+            <div style="color: var(--text-muted);">等待操作...</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">📊</span> ROI回测分析</div>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">回测参数设置</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div>
+                <label style="font-size: 11px; color: var(--text-muted);">最小投注价值</label>
+                <input type="number" id="minValueBet" value="0.05" step="0.01" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-top: 4px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; color: var(--text-muted);">初始资金</label>
+                <input type="number" id="initialBankroll" value="1000" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-top: 4px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; color: var(--text-muted);">单注比例</label>
+                <input type="number" id="betFraction" value="2" step="0.5" style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-top: 4px;">
+              </div>
+            </div>
+          </div>
+          <button onclick="runROIBacktest()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent-win), #00a86b); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">运行ROI回测</button>
+          <div id="roiResult" style="margin-top: 16px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">设置</div>
+        <button class="modal-close" onclick="closeSettings()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">API Token (Football-Data.org)</label>
+          <input type="text" class="form-input" id="apiTokenInput" placeholder="输入您的API Token">
+        </div>
+        <div class="form-group">
+          <label class="form-label">AI API Key (可选)</label>
+          <input type="text" class="form-input" id="aiApiKeyInput" placeholder="输入AI服务API Key">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script>
+    const API_KEY = '4aead2463f6f4b3fa0df85affe7d98b9';
+    let currentLeague = 'PL';
+    let currentSeason = '2024';
+    let teamsCache = {};
+    let matchesCache = {};
+    let selectedTeam = null;
+    let teamMatches = [];
+    
+    const leagueNames = {
+      'PL': '英格兰足球超级联赛',
+      'PD': '西班牙足球甲级联赛',
+      'BL1': '德国足球甲级联赛',
+      'SA': '意大利足球甲级联赛',
+      'FL1': '法国足球甲级联赛',
+      'CL': '欧洲冠军联赛',
+      'DED': '荷兰足球甲级联赛',
+      'PPL': '葡萄牙足球超级联赛'
+    };
+    
+    const teamNamesCN = {
+      'Arsenal FC': '阿森纳',
+      'Aston Villa FC': '阿斯顿维拉',
+      'Chelsea FC': '切尔西',
+      'Liverpool FC': '利物浦',
+      'Manchester City FC': '曼城',
+      'Manchester United FC': '曼联',
+      'Tottenham Hotspur FC': '热刺',
+      'Newcastle United FC': '纽卡斯尔',
+      'Brighton & Hove Albion FC': '布莱顿',
+      'West Ham United FC': '西汉姆联',
+      'Fulham FC': '富勒姆',
+      'Crystal Palace FC': '水晶宫',
+      'Brentford FC': '布伦特福德',
+      'AFC Bournemouth': '伯恩茅斯',
+      'Wolverhampton Wanderers FC': '狼队',
+      'Everton FC': '埃弗顿',
+      'Nottingham Forest FC': '诺丁汉森林',
+      'Leicester City FC': '莱斯特城',
+      'Ipswich Town FC': '伊普斯维奇',
+      'Southampton FC': '南安普顿',
+      'Real Madrid CF': '皇家马德里',
+      'FC Barcelona': '巴塞罗那',
+      'Club Atlético de Madrid': '马德里竞技',
+      'Athletic Club': '毕尔巴鄂竞技',
+      'Sevilla FC': '塞维利亚',
+      'Villarreal CF': '比利亚雷亚尔',
+      'Real Sociedad de Fútbol': '皇家社会',
+      'Real Betis Balompié': '皇家贝蒂斯',
+      'Valencia CF': '瓦伦西亚',
+      'Getafe CF': '赫塔菲',
+      'CA Osasuna': '奥萨苏纳',
+      'RC Celta de Vigo': '塞尔塔',
+      'Girona FC': '赫罗纳',
+      'Rayo Vallecano de Madrid': '巴列卡诺',
+      'RCD Mallorca': '马洛卡',
+      'UD Las Palmas': '拉斯帕尔马斯',
+      'CD Leganés': '莱加内斯',
+      'RCD Espanyol de Barcelona': '西班牙人',
+      'Deportivo Alavés': '阿拉维斯',
+      'Valladolid CF': '巴拉多利德',
+      'FC Bayern München': '拜仁慕尼黑',
+      'Borussia Dortmund': '多特蒙德',
+      'Bayer 04 Leverkusen': '勒沃库森',
+      'RB Leipzig': '莱比锡红牛',
+      'VfB Stuttgart': '斯图加特',
+      'Eintracht Frankfurt': '法兰克福',
+      'VfL Wolfsburg': '沃尔夫斯堡',
+      'SC Freiburg': '弗赖堡',
+      'TSG Hoffenheim': '霍芬海姆',
+      'Borussia Mönchengladbach': '门兴格拉德巴赫',
+      '1. FC Union Berlin': '柏林联合',
+      'Werder Bremen': '云达不莱梅',
+      '1. FSV Mainz 05': '美因茨',
+      'FC Augsburg': '奥格斯堡',
+      'VfL Bochum 1848': '波鸿',
+      '1. FC Heidenheim 1846': '海登海姆',
+      'Holstein Kiel': '基尔',
+      'FC St. Pauli von 1910 e.V.': '圣保利',
+      'FC Internazionale Milano': '国际米兰',
+      'Juventus FC': '尤文图斯',
+      'AC Milan': 'AC米兰',
+      'SSC Napoli': '那不勒斯',
+      'AS Roma': '罗马',
+      'Atalanta BC': '亚特兰大',
+      'SS Lazio': '拉齐奥',
+      'ACF Fiorentina': '佛罗伦萨',
+      'Bologna FC 1909': '博洛尼亚',
+      'Torino FC': '都灵',
+      'Udinese Calcio': '乌迪内斯',
+      'Genoa CFC': '热那亚',
+      'US Sassuolo Calcio': '萨索洛',
+      'Hellas Verona FC': '维罗纳',
+      'Cagliari Calcio': '卡利亚里',
+      'Parma Calcio 1913': '帕尔马',
+      'US Lecce': '莱切',
+      'Empoli FC': '恩波利',
+      'Venezia FC': '威尼斯',
+      'Como 1907': '科莫',
+      'Paris Saint-Germain FC': '巴黎圣日耳曼',
+      'AS Monaco FC': '摩纳哥',
+      'Olympique de Marseille': '马赛',
+      'Olympique Lyonnais': '里昂',
+      'LOSC Lille Métropole': '里尔',
+      'Stade Rennais FC 1901': '雷恩',
+      'OGC Nice': '尼斯',
+      'RC Lens': '朗斯',
+      'Montpellier HSC': '蒙彼利埃',
+      'FC Nantes': '南特',
+      'Stade Brestois 29': '布雷斯特',
+      'Toulouse FC': '图卢兹',
+      'Stade de Reims': '兰斯',
+      'Le Havre AC': '勒阿弗尔',
+      'FC Lorient': '洛里昂',
+      'AJ Auxerre': '欧塞尔',
+      'Angers SCO': '昂热',
+      'AS Saint-Étienne': '圣埃蒂安',
+      'AJ Auxerre': '欧塞尔'
+    };
+    
+    function getTeamNameCN(name) {
+      return teamNamesCN[name] || name;
+    }
+    
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type + ' show';
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    let mlDataset = [];
+    let mlModel = null;
+    let mlWeights = {
+      encoding: 1.0,
+      goals: 1.0,
+      home: 1.0,
+      form: 1.0,
+      over: 1.0,
+      power: 1.0
+    };
+    
+    function mlLog(message) {
+      const logEl = document.getElementById('mlLog');
+      const time = new Date().toLocaleTimeString();
+      logEl.innerHTML += `<div style="margin: 2px 0;">[${time}] ${message}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    
+    function buildDataset() {
+      mlLog('开始构建数据集...');
+      mlDataset = [];
+      
+      let totalMatches = 0;
+      
+      Object.keys(matchesCache).forEach(league => {
+        const matches = matchesCache[league];
+        if (!matches) return;
+        
+        matches.forEach(match => {
+          if (match.status !== 'FINISHED') return;
+          
+          const homeTeam = match.homeTeam;
+          const awayTeam = match.awayTeam;
+          const homeScore = match.score.fullTime.home;
+          const awayScore = match.score.fullTime.away;
+          
+          if (homeScore == null || awayScore == null) return;
+          
+          let label;
+          if (homeScore > awayScore) label = 1;
+          else if (homeScore < awayScore) label = 0;
+          else label = 0.5;
+          
+          const features = extractFeatures(match, homeTeam.id);
+          
+          mlDataset.push({
+            features: features,
+            label: label,
+            match: `${homeTeam.name} vs ${awayTeam.name}`,
+            date: match.utcDate
+          });
+          
+          totalMatches++;
+        });
+      });
+      
+      document.getElementById('mlDataCount').textContent = mlDataset.length;
+      mlLog(`数据集构建完成: ${mlDataset.length} 条记录`);
+      
+      if (mlDataset.length > 0) {
+        mlLog(`示例数据: ${JSON.stringify(mlDataset[0])}`);
+      }
+      
+      showToast(`数据集构建完成: ${mlDataset.length} 条`, 'success');
+    }
+    
+    function extractFeatures(match, teamId) {
+      const isHome = match.homeTeam.id === teamId;
+      const homeScore = match.score.fullTime.home || 0;
+      const awayScore = match.score.fullTime.away || 0;
+      const totalGoals = homeScore + awayScore;
+      
+      const encoding = encodeMatch(match, isHome);
+      const goals = isHome ? homeScore : awayScore;
+      const homeAdv = isHome ? 1 : 0;
+      
+      const powerIndex = calculateMatchPowerIndex(match, teamId);
+      
+      return {
+        encoding: (encoding + 1) / 5,
+        goals: goals / 5,
+        home: homeAdv,
+        form: 0.5,
+        over: totalGoals > 2.5 ? 1 : 0,
+        power: powerIndex
+      };
+    }
+    
+    function sigmoid(x) {
+      return 1 / (1 + Math.exp(-x));
+    }
+    
+    function trainModel() {
+      if (mlDataset.length < 10) {
+        mlLog('错误: 数据量不足，至少需要10条数据');
+        showToast('数据量不足', 'error');
+        return;
+      }
+      
+      mlLog('开始训练 Logistic Regression 模型...');
+      mlLog(`训练数据: ${mlDataset.length} 条`);
+      
+      const learningRate = 0.1;
+      const iterations = 1000;
+      
+      let w_encoding = 0.5, w_goals = 0.5, w_home = 0.5, w_form = 0.5, w_over = 0.5, w_power = 0.5;
+      let bias = 0;
+      
+      for (let iter = 0; iter < iterations; iter++) {
+        let totalLoss = 0;
+        let dEncoding = 0, dGoals = 0, dHome = 0, dForm = 0, dOver = 0, dPower = 0, dBias = 0;
+        
+        mlDataset.forEach(data => {
+          const f = data.features;
+          const y = data.label;
+          
+          const z = w_encoding * f.encoding + w_goals * f.goals + w_home * f.home + 
+                    w_form * f.form + w_over * f.over + w_power * f.power + bias;
+          const pred = sigmoid(z);
+          
+          const error = pred - y;
+          totalLoss += error * error;
+          
+          dEncoding += error * f.encoding;
+          dGoals += error * f.goals;
+          dHome += error * f.home;
+          dForm += error * f.form;
+          dOver += error * f.over;
+          dPower += error * f.power;
+          dBias += error;
+        });
+        
+        const n = mlDataset.length;
+        w_encoding -= learningRate * dEncoding / n;
+        w_goals -= learningRate * dGoals / n;
+        w_home -= learningRate * dHome / n;
+        w_form -= learningRate * dForm / n;
+        w_over -= learningRate * dOver / n;
+        w_power -= learningRate * dPower / n;
+        bias -= learningRate * dBias / n;
+        
+        if (iter % 200 === 0) {
+          mlLog(`迭代 ${iter}: Loss = ${(totalLoss / n).toFixed(4)}`);
+        }
+      }
+      
+      mlWeights = {
+        encoding: w_encoding,
+        goals: w_goals,
+        home: w_home,
+        form: w_form,
+        over: w_over,
+        power: w_power
+      };
+      mlModel = { weights: mlWeights, bias: bias };
+      
+      document.getElementById('weight_encoding').textContent = w_encoding.toFixed(3);
+      document.getElementById('weight_goals').textContent = w_goals.toFixed(3);
+      document.getElementById('weight_home').textContent = w_home.toFixed(3);
+      document.getElementById('weight_form').textContent = w_form.toFixed(3);
+      document.getElementById('weight_over').textContent = w_over.toFixed(3);
+      document.getElementById('weight_power').textContent = w_power.toFixed(3);
+      
+      document.getElementById('mlStatus').textContent = '已训练';
+      document.getElementById('mlStatus').style.color = 'var(--accent-win)';
+      
+      mlLog('训练完成!');
+      mlLog(`最终权重: encoding=${w_encoding.toFixed(3)}, goals=${w_goals.toFixed(3)}, home=${w_home.toFixed(3)}, form=${w_form.toFixed(3)}, over=${w_over.toFixed(3)}, power=${w_power.toFixed(3)}`);
+      mlLog(`Bias: ${bias.toFixed(3)}`);
+      
+      showToast('模型训练完成!', 'success');
+    }
+    
+    function validateModel() {
+      if (!mlModel || mlDataset.length < 10) {
+        mlLog('错误: 请先训练模型');
+        showToast('请先训练模型', 'error');
+        return;
+      }
+      
+      mlLog('开始验证模型...');
+      
+      let correct = 0;
+      let total = 0;
+      const confusion = { tp: 0, tn: 0, fp: 0, fn: 0 };
+      
+      const testSize = Math.floor(mlDataset.length * 0.2);
+      const testData = mlDataset.slice(-testSize);
+      
+      testData.forEach(data => {
+        const f = data.features;
+        const w = mlModel.weights;
+        
+        const z = w.encoding * f.encoding + w.goals * f.goals + w.home * f.home + 
+                  w.form * f.form + w.over * f.over + w.power * f.power + mlModel.bias;
+        const pred = sigmoid(z);
+        
+        const predicted = pred > 0.5 ? 1 : (pred < 0.5 ? 0 : 0.5);
+        const actual = data.label;
+        
+        if (Math.abs(predicted - actual) < 0.1) {
+          correct++;
+        }
+        total++;
+        
+        if (actual === 1 && predicted === 1) confusion.tp++;
+        else if (actual === 0 && predicted === 0) confusion.tn++;
+        else if (actual === 1 && predicted === 0) confusion.fn++;
+        else if (actual === 0 && predicted === 1) confusion.fp++;
+      });
+      
+      const accuracy = (correct / total * 100).toFixed(1);
+      
+      document.getElementById('mlAccuracy').textContent = accuracy + '%';
+      
+      mlLog(`验证完成: ${correct}/${total} 正确`);
+      mlLog(`准确率: ${accuracy}%`);
+      mlLog(`混淆矩阵: TP=${confusion.tp}, TN=${confusion.tn}, FP=${confusion.fp}, FN=${confusion.fn}`);
+      
+      const precision = confusion.tp / (confusion.tp + confusion.fp) || 0;
+      const recall = confusion.tp / (confusion.tp + confusion.fn) || 0;
+      const f1 = 2 * precision * recall / (precision + recall) || 0;
+      
+      mlLog(`精确率: ${(precision * 100).toFixed(1)}%`);
+      mlLog(`召回率: ${(recall * 100).toFixed(1)}%`);
+      mlLog(`F1分数: ${f1.toFixed(3)}`);
+      
+      showToast(`验证完成: 准确率 ${accuracy}%`, 'success');
+    }
+    
+    function runROIBacktest() {
+      if (!mlModel) {
+        showToast('请先训练模型', 'error');
+        return;
+      }
+      
+      const minProb = parseFloat(document.getElementById('minProbThreshold').value) || 0.6;
+      const initialBankroll = parseFloat(document.getElementById('initialBankroll').value) || 1000;
+      
+      mlLog(`开始ROI回测... 最小概率阈值: ${minProb}`);
+      
+      let bankroll = initialBankroll;
+      let bets = 0;
+      let wins = 0;
+      
+      mlDataset.slice(0, -10).forEach((data, i) => {
+        const f = data.features;
+        const w = mlModel.weights;
+        
+        const z = w.encoding * f.encoding + w.goals * f.goals + w.home * f.home + 
+                  w.form * f.form + w.over * f.over + w.power * f.power + mlModel.bias;
+        const prob = sigmoid(z);
+        
+        if (prob > minProb) {
+          const betAmount = bankroll * 0.02;
+          bankroll -= betAmount;
+          bets++;
+          
+          if (data.label === 1) {
+            const odds = 1.5 + (1 - prob) * 2;
+            bankroll += betAmount * odds;
+            wins++;
+          }
+        }
+      });
+      
+      const roi = ((bankroll - initialBankroll) / initialBankroll * 100).toFixed(1);
+      
+      document.getElementById('roiResult').innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <div style="font-size: 11px; color: var(--text-secondary);">总投注次数</div>
+            <div style="font-size: 20px; font-weight: 700;">${bets}</div>
+          </div>
+          <div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <div style="font-size: 11px; color: var(--text-secondary);">胜率</div>
+            <div style="font-size: 20px; font-weight: 700; color: ${wins/bets > 0.5 ? 'var(--accent-win)' : 'var(--accent-lose)'};">${bets > 0 ? (wins/bets*100).toFixed(1) : 0}%</div>
+          </div>
+          <div style="text-align: center; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+            <div style="font-size: 11px; color: var(--text-secondary);">ROI</div>
+            <div style="font-size: 20px; font-weight: 700; color: ${roi > 0 ? 'var(--accent-win)' : 'var(--accent-lose)'};">${roi}%</div>
+          </div>
+        </div>
+        <div style="margin-top: 12px; text-align: center; font-size: 14px;">
+          最终资金: <strong style="color: ${bankroll > initialBankroll ? 'var(--accent-win)' : 'var(--accent-lose)'};">$${bankroll.toFixed(2)}</strong>
+        </div>
+      `;
+      
+      mlLog(`ROI回测完成: ${bets}次投注, ${wins}次胜利, ROI=${roi}%`);
+      showToast('ROI回测完成', 'success');
+    }
+    
+    function predictWithModel(features) {
+      if (!mlModel) return null;
+      
+      const w = mlModel.weights;
+      const z = w.encoding * features.encoding + w.goals * features.goals + w.home * features.home + 
+                w.form * features.form + w.over * features.over + w.power * features.power + mlModel.bias;
+      
+      return sigmoid(z);
+    }
+    
+    function formatMatchTime(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = date - now;
+      
+      if (diff < 0 && diff > -7200000) {
+        return `<span class="live-badge"><span class="live-dot"></span>进行中</span>`;
+      }
+      
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${month}/${day}`;
+    }
+    
+    async function fetchAPI(endpoint) {
+      const response = await fetch(`/api/${endpoint}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    }
+    
+    async function loadTeams() {
+      const cacheKey = `${currentLeague}_${currentSeason}`;
+      if (teamsCache[cacheKey]) {
+        renderTeamSelector(teamsCache[cacheKey]);
+        return;
+      }
+      
+      try {
+        const data = await fetchAPI(`competitions/${currentLeague}/teams?season=${currentSeason}`);
+        teamsCache[cacheKey] = data.teams;
+        renderTeamSelector(data.teams);
+      } catch (error) {
+        console.error('Failed to load teams:', error);
+        document.getElementById('teamSelector').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">❌</div>
+            <p>加载失败: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    function renderTeamSelector(teams) {
+      const container = document.getElementById('teamSelector');
+      container.innerHTML = teams.map(team => `
+        <button class="team-btn" data-team-id="${team.id}" data-team-name="${getTeamNameCN(team.name)}" onclick="selectTeam(${team.id}, '${getTeamNameCN(team.name).replace(/'/g, "\\'")}')">
+          ${getTeamNameCN(team.name)}
+        </button>
+      `).join('');
+    }
+    
+    async function selectTeam(teamId, teamName) {
+      document.querySelectorAll('.team-btn').forEach(btn => btn.classList.remove('selected'));
+      document.querySelector(`[data-team-id="${teamId}"]`).classList.add('selected');
+      
+      selectedTeam = { id: teamId, name: teamName };
+      
+      showToast(`正在加载 ${teamName} 的数据...`, 'info');
+      
+      try {
+        const data = await fetchAPI(`teams/${teamId}/matches?status=FINISHED&season=${currentSeason}`);
+        teamMatches = data.matches || [];
+        
+        const opponentData = await loadOpponentData(teamMatches, teamId);
+        
+        runAnalysis(teamName, teamMatches, opponentData);
+      } catch (error) {
+        console.error('Failed to load matches:', error);
+        showToast('加载比赛数据失败', 'error');
+      }
+    }
+    
+    async function loadOpponentData(matches, teamId) {
+      const opponents = new Map();
+      
+      const recentMatches = matches.slice(-5);
+      
+      for (const match of recentMatches) {
+        const isHome = match.homeTeam.id === teamId;
+        const opponentId = isHome ? match.awayTeam.id : match.homeTeam.id;
+        const opponentName = isHome ? match.awayTeam.name : match.homeTeam.name;
+        
+        if (!opponents.has(opponentId)) {
+          try {
+            const oppData = await fetchAPI(`teams/${opponentId}/matches?status=FINISHED&season=${currentSeason}`);
+            opponents.set(opponentId, {
+              name: opponentName,
+              matches: oppData.matches || [],
+              analysis: null
+            });
+          } catch (e) {
+            console.warn(`Failed to load opponent ${opponentName} data:`, e);
+          }
+        }
+      }
+      
+      opponents.forEach((opp, id) => {
+        if (opp.matches.length > 0) {
+          opp.analysis = analyzeMultiDimension(opp.matches, parseInt(id));
+        }
+      });
+      
+      return opponents;
+    }
+    
+    function combineTeamAndOpponent(teamAnalysis, opponentAnalyses, teamId) {
+      if (!opponentAnalyses || opponentAnalyses.size === 0) {
+        return {
+          combinedWinProb: teamAnalysis.fullTime.wins / teamAnalysis.fullTime.encodings.length * 100,
+          opponentFactor: 0,
+          adjustedProb: teamAnalysis.fullTime.wins / teamAnalysis.fullTime.encodings.length * 100
+        };
+      }
+      
+      let totalOppWinRate = 0;
+      let totalOppLossRate = 0;
+      let opponentCount = 0;
+      
+      opponentAnalyses.forEach((opp) => {
+        if (opp.analysis) {
+          const oppWins = opp.analysis.fullTime.wins;
+          const oppLosses = opp.analysis.fullTime.losses;
+          const oppTotal = opp.analysis.fullTime.encodings.length;
+          
+          totalOppWinRate += oppWins / oppTotal;
+          totalOppLossRate += oppLosses / oppTotal;
+          opponentCount++;
+        }
+      });
+      
+      const avgOppWinRate = opponentCount > 0 ? totalOppWinRate / opponentCount : 0.5;
+      const avgOppLossRate = opponentCount > 0 ? totalOppLossRate / opponentCount : 0.5;
+      
+      const teamWinRate = teamAnalysis.fullTime.wins / teamAnalysis.fullTime.encodings.length;
+      
+      const combinedWinProb = (teamWinRate * CONFIG.recentMatchWeight + (1 - avgOppWinRate) * CONFIG.opponentWeight) * 100;
+      
+      const opponentStrength = avgOppWinRate > 0.5 ? 'strong' : avgOppWinRate < 0.4 ? 'weak' : 'average';
+      const opponentFactor = (avgOppWinRate - 0.5) * 20;
+      
+      return {
+        combinedWinProb,
+        opponentFactor,
+        adjustedProb: Math.max(10, Math.min(90, combinedWinProb - opponentFactor)),
+        opponentStrength,
+        avgOppWinRate: avgOppWinRate * 100,
+        avgOppLossRate: avgOppLossRate * 100,
+        opponentCount
+      };
+    }
+    
+    function encodeMatch(match, isHome) {
+      const homeScore = match.score.fullTime.home;
+      const awayScore = match.score.fullTime.away;
+      const isWin = isHome ? homeScore > awayScore : awayScore > homeScore;
+      const isDraw = homeScore === awayScore;
+      const isLoss = isHome ? homeScore < awayScore : awayScore < homeScore;
+      
+      if (isHome) {
+        if (isWin) return 3;
+        if (isDraw) return 1;
+        if (isLoss) return -1;
+      } else {
+        if (isWin) return 4;
+        if (isDraw) return 2;
+        if (isLoss) return 0;
+      }
+      return 0;
+    }
+    
+    const ENCODING_LABELS = {
+      4: '客场胜(+4)',
+      3: '主场胜(+3)',
+      2: '客场平(+2)',
+      1: '主场平(+1)',
+      0: '客场负(0)',
+      '-1': '主场负(-1)'
+    };
+    
+    function calculateMatchPowerIndex(match, teamId) {
+      const isHome = match.homeTeam.id === teamId;
+      const homeScore = match.score.fullTime.home;
+      const awayScore = match.score.fullTime.away;
+      const totalGoals = homeScore + awayScore;
+      
+      let resCode = 0;
+      const result = isHome 
+        ? (homeScore > awayScore ? 'W' : homeScore < awayScore ? 'L' : 'D')
+        : (awayScore > homeScore ? 'W' : awayScore < homeScore ? 'L' : 'D');
+      
+      if (result === 'W' && isHome) resCode = 3;
+      else if (result === 'W' && !isHome) resCode = 4;
+      else if (result === 'D') resCode = isHome ? 1 : 2;
+      else if (result === 'L' && isHome) resCode = -1;
+      else if (result === 'L' && !isHome) resCode = 0;
+      
+      const goalsFor = isHome ? homeScore : awayScore;
+      const goalsAgainst = isHome ? awayScore : homeScore;
+      const goalDiff = goalsFor - goalsAgainst;
+      
+      let sizeBase = totalGoals >= 3 ? 2 : 1;
+      let sizeWeighted = sizeBase;
+      
+      if (totalGoals >= 3) {
+        if (result === 'W' && isHome) {
+          sizeWeighted = (goalDiff >= 2) ? 4 : 3;
+        } else if (result === 'W' && !isHome) {
+          sizeWeighted = 2 + goalDiff;
+        } else if (result === 'L' && isHome) {
+          sizeWeighted = 2 - Math.abs(goalDiff);
+        } else {
+          sizeWeighted = 2;
+        }
+      } else {
+        if (result === 'W' && isHome) {
+          sizeWeighted = 1;
+        } else if (result === 'W' && !isHome) {
+          sizeWeighted = 1 + goalDiff;
+        } else if (result === 'L' && isHome) {
+          sizeWeighted = 1 - Math.abs(goalDiff);
+        } else {
+          sizeWeighted = 1;
+        }
+      }
+      
+      const rawScore = (resCode + sizeWeighted + goalsFor) / 3;
+      return rawScore - Math.floor(rawScore);
+    }
+    
+    function calculatePowerLineTrend(matches, teamId) {
+      if (matches.length < 3) return null;
+      
+      const sortedMatches = [...matches].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+      const powerIndices = sortedMatches.map(m => calculateMatchPowerIndex(m, teamId));
+      
+      const avgPower = powerIndices.reduce((a, b) => a + b, 0) / powerIndices.length;
+      const recent3Avg = powerIndices.slice(-3).reduce((a, b) => a + b, 0) / 3;
+      const recent5Avg = powerIndices.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, powerIndices.length);
+      
+      let trend = 'stable';
+      if (recent3Avg > avgPower + 0.1) trend = 'rising';
+      else if (recent3Avg < avgPower - 0.1) trend = 'falling';
+      
+      let signal = 'HOLD';
+      let signalDesc = '暂无明显信号';
+      
+      if (trend === 'rising' && recent3Avg > 0.6) {
+        signal = 'STRONG_BUY';
+        signalDesc = '强势上升信号，状态火热';
+      } else if (trend === 'falling' && recent3Avg < 0.3) {
+        signal = 'VALUE_BUY';
+        signalDesc = '潜在价值区，可能反弹';
+      } else if (trend === 'falling' && recent3Avg > 0.5) {
+        signal = 'STRONG_SELL';
+        signalDesc = '强弩之末，注意回调';
+      }
+      
+      return {
+        powerIndices,
+        avgPower,
+        recent3Avg,
+        recent5Avg,
+        trend,
+        signal,
+        signalDesc
+      };
+    }
+    
+    function encodeHalfResult(halfHome, halfAway, isHome) {
+      const isWin = isHome ? halfHome > halfAway : halfAway > halfHome;
+      const isDraw = halfHome === halfAway;
+      const isLoss = isHome ? halfHome < halfAway : halfAway < halfHome;
+      
+      if (isHome) {
+        if (isWin) return 3;
+        if (isDraw) return 1;
+        if (isLoss) return -1;
+      } else {
+        if (isWin) return 4;
+        if (isDraw) return 2;
+        if (isLoss) return 0;
+      }
+      return 0;
+    }
+    
+    function encodeGoals(goals) {
+      if (goals === 0) return -2;
+      if (goals === 1) return -1;
+      if (goals === 2) return 0;
+      if (goals === 3) return 1;
+      if (goals === 4) return 2;
+      return 3;
+    }
+    
+    function encodeTeamGoals(goals, isHome) {
+      if (goals === 0) return isHome ? -2 : -1;
+      if (goals === 1) return isHome ? -1 : 0;
+      if (goals === 2) return isHome ? 0 : 1;
+      if (goals === 3) return isHome ? 1 : 2;
+      return isHome ? 2 : 3;
+    }
+    
+    function analyzeMultiDimension(matches, teamId) {
+      const sortedMatches = [...matches].sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate));
+      
+      const analysis = {
+        fullTime: { encodings: [], homeEnc: [], awayEnc: [], wins: 0, draws: 0, losses: 0 },
+        firstHalf: { encodings: [], homeEnc: [], awayEnc: [], wins: 0, draws: 0, losses: 0 },
+        secondHalf: { encodings: [], homeEnc: [], awayEnc: [], wins: 0, draws: 0, losses: 0 },
+        totalGoals: { encodings: [], values: [], avg: 0, over25: 0, over35: 0 },
+        firstHalfGoals: { encodings: [], values: [], avg: 0 },
+        secondHalfGoals: { encodings: [], values: [], avg: 0 },
+        homeTeamGoals: { full: { encodings: [], values: [], avg: 0 }, first: { encodings: [], values: [], avg: 0 }, second: { encodings: [], values: [], avg: 0 } },
+        awayTeamGoals: { full: { encodings: [], values: [], avg: 0 }, first: { encodings: [], values: [], avg: 0 }, second: { encodings: [], values: [], avg: 0 } },
+        matchData: []
+      };
+      
+      sortedMatches.forEach(match => {
+        const isHome = match.homeTeam.id === teamId;
+        
+        const fullHome = match.score.fullTime.home;
+        const fullAway = match.score.fullTime.away;
+        const halfHome = match.score.halfTime?.home ?? 0;
+        const halfAway = match.score.halfTime?.away ?? 0;
+        
+        const secondHalfHome = fullHome - halfHome;
+        const secondHalfAway = fullAway - halfAway;
+        
+        const fullCode = encodeMatch(match, isHome);
+        const firstHalfCode = encodeHalfResult(halfHome, halfAway, isHome);
+        const secondHalfCode = encodeHalfResult(secondHalfHome, secondHalfAway, isHome);
+        
+        analysis.fullTime.encodings.push(fullCode);
+        analysis.firstHalf.encodings.push(firstHalfCode);
+        analysis.secondHalf.encodings.push(secondHalfCode);
+        
+        if (isHome) {
+          analysis.fullTime.homeEnc.push(fullCode);
+          analysis.firstHalf.homeEnc.push(firstHalfCode);
+          analysis.secondHalf.homeEnc.push(secondHalfCode);
+        } else {
+          analysis.fullTime.awayEnc.push(fullCode);
+          analysis.firstHalf.awayEnc.push(firstHalfCode);
+          analysis.secondHalf.awayEnc.push(secondHalfCode);
+        }
+        
+        if (fullCode >= 3) analysis.fullTime.wins++;
+        else if (fullCode === 1 || fullCode === 2) analysis.fullTime.draws++;
+        else analysis.fullTime.losses++;
+        
+        if (firstHalfCode >= 3) analysis.firstHalf.wins++;
+        else if (firstHalfCode === 1 || firstHalfCode === 2) analysis.firstHalf.draws++;
+        else analysis.firstHalf.losses++;
+        
+        if (secondHalfCode >= 3) analysis.secondHalf.wins++;
+        else if (secondHalfCode === 1 || secondHalfCode === 2) analysis.secondHalf.draws++;
+        else analysis.secondHalf.losses++;
+        
+        const totalGoals = fullHome + fullAway;
+        const firstHalfGoals = halfHome + halfAway;
+        const secondHalfGoals = secondHalfHome + secondHalfAway;
+        
+        analysis.totalGoals.encodings.push(encodeGoals(totalGoals));
+        analysis.totalGoals.values.push(totalGoals);
+        analysis.firstHalfGoals.encodings.push(encodeGoals(firstHalfGoals));
+        analysis.firstHalfGoals.values.push(firstHalfGoals);
+        analysis.secondHalfGoals.encodings.push(encodeGoals(secondHalfGoals));
+        analysis.secondHalfGoals.values.push(secondHalfGoals);
+        
+        if (totalGoals > 2.5) analysis.totalGoals.over25++;
+        if (totalGoals > 3.5) analysis.totalGoals.over35++;
+        
+        const teamFullGoals = isHome ? fullHome : fullAway;
+        const teamFirstGoals = isHome ? halfHome : halfAway;
+        const teamSecondGoals = isHome ? secondHalfHome : secondHalfAway;
+        const oppFullGoals = isHome ? fullAway : fullHome;
+        const oppFirstGoals = isHome ? halfAway : halfHome;
+        const oppSecondGoals = isHome ? secondHalfAway : secondHalfHome;
+        
+        analysis.homeTeamGoals.full.encodings.push(encodeTeamGoals(teamFullGoals, true));
+        analysis.homeTeamGoals.full.values.push(teamFullGoals);
+        analysis.homeTeamGoals.first.encodings.push(encodeTeamGoals(teamFirstGoals, true));
+        analysis.homeTeamGoals.first.values.push(teamFirstGoals);
+        analysis.homeTeamGoals.second.encodings.push(encodeTeamGoals(teamSecondGoals, true));
+        analysis.homeTeamGoals.second.values.push(teamSecondGoals);
+        
+        analysis.awayTeamGoals.full.encodings.push(encodeTeamGoals(oppFullGoals, false));
+        analysis.awayTeamGoals.full.values.push(oppFullGoals);
+        analysis.awayTeamGoals.first.encodings.push(encodeTeamGoals(oppFirstGoals, false));
+        analysis.awayTeamGoals.first.values.push(oppFirstGoals);
+        analysis.awayTeamGoals.second.encodings.push(encodeTeamGoals(oppSecondGoals, false));
+        analysis.awayTeamGoals.second.values.push(oppSecondGoals);
+        
+        analysis.matchData.push({
+          date: match.utcDate,
+          opponent: isHome ? match.awayTeam.name : match.homeTeam.name,
+          isHome,
+          score: { fullHome, fullAway, halfHome, halfAway },
+          codes: { full: fullCode, first: firstHalfCode, second: secondHalfCode }
+        });
+      });
+      
+      const n = sortedMatches.length;
+      analysis.totalGoals.avg = analysis.totalGoals.values.reduce((a, b) => a + b, 0) / n;
+      analysis.firstHalfGoals.avg = analysis.firstHalfGoals.values.reduce((a, b) => a + b, 0) / n;
+      analysis.secondHalfGoals.avg = analysis.secondHalfGoals.values.reduce((a, b) => a + b, 0) / n;
+      analysis.homeTeamGoals.full.avg = analysis.homeTeamGoals.full.values.reduce((a, b) => a + b, 0) / n;
+      analysis.homeTeamGoals.first.avg = analysis.homeTeamGoals.first.values.reduce((a, b) => a + b, 0) / n;
+      analysis.homeTeamGoals.second.avg = analysis.homeTeamGoals.second.values.reduce((a, b) => a + b, 0) / n;
+      analysis.awayTeamGoals.full.avg = analysis.awayTeamGoals.full.values.reduce((a, b) => a + b, 0) / n;
+      analysis.awayTeamGoals.first.avg = analysis.awayTeamGoals.first.values.reduce((a, b) => a + b, 0) / n;
+      analysis.awayTeamGoals.second.avg = analysis.awayTeamGoals.second.values.reduce((a, b) => a + b, 0) / n;
+      
+      return analysis;
+    }
+    
+    const CONFIG = {
+      timeDecayLambda: 0.03,
+      recentMatchWeight: 0.6,
+      opponentWeight: 0.4,
+      winThreshold: 55,
+      over25Threshold: 60,
+      over35Threshold: 50,
+      homeAdvantageBonus: 5,
+      features: {
+        form: 0.3,
+        goalDiff: 0.25,
+        over25Rate: 0.2,
+        homeAdvantage: 0.15,
+        consistency: 0.1
+      }
+    };
+    
+    function calculateTimeWeight(matchDate, referenceDate = new Date()) {
+      const matchTime = new Date(matchDate).getTime();
+      const refTime = referenceDate.getTime();
+      const daysDiff = (refTime - matchTime) / (1000 * 60 * 60 * 24);
+      return Math.exp(-CONFIG.timeDecayLambda * daysDiff);
+    }
+    
+    function calculateWeightedEncodings(encodings, matchDates, lastN = 10) {
+      const recentEnc = encodings.slice(-lastN);
+      const recentDates = matchDates.slice(-lastN);
+      
+      let weightedSum = 0;
+      let totalWeight = 0;
+      
+      recentEnc.forEach((enc, i) => {
+        const weight = calculateTimeWeight(recentDates[i]);
+        weightedSum += enc * weight;
+        totalWeight += weight;
+      });
+      
+      return {
+        weightedSum: totalWeight > 0 ? weightedSum / totalWeight : 0,
+        rawSum: recentEnc.reduce((a, b) => a + b, 0),
+        avgWeight: totalWeight / lastN
+      };
+    }
+    
+    function calculateMultiFeatures(analysis, matchDates, teamId) {
+      const lastN = 10;
+      const encodings = analysis.fullTime.encodings.slice(-lastN);
+      const goals = analysis.totalGoals.values.slice(-lastN);
+      const dates = matchDates.slice(-lastN);
+      
+      let formScore = 0;
+      let goalDiffSum = 0;
+      let over25Count = 0;
+      let homeWins = 0;
+      let homeGames = 0;
+      let consistencyScore = 0;
+      let totalWeight = 0;
+      
+      encodings.forEach((enc, i) => {
+        const weight = calculateTimeWeight(dates[i]);
+        formScore += enc * weight;
+        goalDiffSum += (goals[i] - 2.5) * weight;
+        if (goals[i] > 2.5) over25Count += weight;
+        
+        const match = analysis.matchData[analysis.matchData.length - lastN + i];
+        if (match && match.isHome) {
+          homeGames++;
+          if (enc >= 3) homeWins++;
+        }
+        
+        totalWeight += weight;
+      });
+      
+      const meanEnc = encodings.reduce((a, b) => a + b, 0) / encodings.length;
+      let variance = 0;
+      encodings.forEach(enc => {
+        variance += Math.pow(enc - meanEnc, 2);
+      });
+      consistencyScore = 1 / (1 + Math.sqrt(variance / encodings.length));
+      
+      return {
+        form: totalWeight > 0 ? formScore / totalWeight : 0,
+        goalDiff: totalWeight > 0 ? goalDiffSum / totalWeight : 0,
+        over25Rate: totalWeight > 0 ? over25Count / totalWeight * 100 : 0,
+        homeAdvantage: homeGames > 0 ? homeWins / homeGames * 100 : 50,
+        consistency: consistencyScore * 100,
+        rawSum: encodings.reduce((a, b) => a + b, 0)
+      };
+    }
+    
+    function calculatePrediction(encodings, lastN = 10) {
+      const lastNEnc = encodings.slice(-lastN);
+      const sum = lastNEnc.reduce((a, b) => a + b, 0);
+      const avg = sum / lastN;
+      
+      let winProb = 0, drawProb = 0, loseProb = 0;
+      
+      if (sum >= 20) {
+        winProb = 65 + Math.min(15, (sum - 20) * 1.5);
+        drawProb = 20;
+        loseProb = 100 - winProb - drawProb;
+      } else if (sum >= 10) {
+        winProb = 45 + (sum - 10) * 2;
+        drawProb = 25;
+        loseProb = 100 - winProb - drawProb;
+      } else if (sum >= 0) {
+        winProb = 30 + sum * 1.5;
+        drawProb = 30;
+        loseProb = 100 - winProb - drawProb;
+      } else {
+        winProb = Math.max(15, 30 + sum * 1.5);
+        drawProb = 25;
+        loseProb = 100 - winProb - drawProb;
+      }
+      
+      return { sum, avg, winProb, drawProb, loseProb };
+    }
+    
+    function calculateGoalsPrediction(encodings, values, lastN = 10) {
+      const lastNVal = values.slice(-lastN);
+      const lastNEnc = encodings.slice(-lastN);
+      const sum = lastNEnc.reduce((a, b) => a + b, 0);
+      const avgGoals = lastNVal.reduce((a, b) => a + b, 0) / lastN;
+      
+      const over25 = lastNVal.filter(v => v > 2.5).length / lastN * 100;
+      const over35 = lastNVal.filter(v => v > 3.5).length / lastN * 100;
+      const over45 = lastNVal.filter(v => v > 4.5).length / lastN * 100;
+      
+      let predictedRange = '0-2球';
+      if (avgGoals >= 4) predictedRange = '4球以上';
+      else if (avgGoals >= 3) predictedRange = '3-4球';
+      else if (avgGoals >= 2) predictedRange = '2-3球';
+      
+      return { sum, avgGoals, over25, over35, over45, predictedRange };
+    }
+    
+    function collisionAnalysis(analysis) {
+      const fullPred = calculatePrediction(analysis.fullTime.encodings);
+      const firstPred = calculatePrediction(analysis.firstHalf.encodings);
+      const secondPred = calculatePrediction(analysis.secondHalf.encodings);
+      const goalsPred = calculateGoalsPrediction(analysis.totalGoals.encodings, analysis.totalGoals.values);
+      const firstGoalsPred = calculateGoalsPrediction(analysis.firstHalfGoals.encodings, analysis.firstHalfGoals.values);
+      const secondGoalsPred = calculateGoalsPrediction(analysis.secondHalfGoals.encodings, analysis.secondHalfGoals.values);
+      const teamGoalsPred = calculateGoalsPrediction(analysis.homeTeamGoals.full.encodings, analysis.homeTeamGoals.full.values);
+      const teamFirstGoalsPred = calculateGoalsPrediction(analysis.homeTeamGoals.first.encodings, analysis.homeTeamGoals.first.values);
+      const teamSecondGoalsPred = calculateGoalsPrediction(analysis.homeTeamGoals.second.encodings, analysis.homeTeamGoals.second.values);
+      const oppGoalsPred = calculateGoalsPrediction(analysis.awayTeamGoals.full.encodings, analysis.awayTeamGoals.full.values);
+      const oppFirstGoalsPred = calculateGoalsPrediction(analysis.awayTeamGoals.first.encodings, analysis.awayTeamGoals.first.values);
+      const oppSecondGoalsPred = calculateGoalsPrediction(analysis.awayTeamGoals.second.encodings, analysis.awayTeamGoals.second.values);
+      
+      const signals = [];
+      const conflicts = [];
+      const recommendations = [];
+      
+      // ========== 维度间协同信号检测 ==========
+      
+      // 信号1: 全场胜 + 下半场胜 协同
+      if (fullPred.winProb > 50 && secondPred.winProb > 55) {
+        signals.push({
+          type: 'synergy',
+          name: '全场+下半场双胜信号',
+          strength: (fullPred.winProb + secondPred.winProb) / 2,
+          dimensions: ['全场胜平负', '下半场胜平负'],
+          insight: '全场和下半场都指向胜利，球队整体实力占优'
+        });
+      }
+      
+      // 信号2: 全场胜 + 本队入球高 协同
+      if (fullPred.winProb > 55 && teamGoalsPred.avgGoals > 1.8) {
+        signals.push({
+          type: 'synergy',
+          name: '胜+进球双高信号',
+          strength: Math.min(fullPred.winProb, teamGoalsPred.avgGoals * 30),
+          dimensions: ['全场胜平负', '全场本队入球'],
+          insight: `胜率${fullPred.winProb.toFixed(0)}%且场均入球${teamGoalsPred.avgGoals.toFixed(1)}，进攻效率高`
+        });
+      }
+      
+      // 信号3: 下半场胜 + 下半场入球高 协同
+      if (secondPred.winProb > 55 && secondGoalsPred.avgGoals > 1.5) {
+        signals.push({
+          type: 'synergy',
+          name: '下半场发力信号',
+          strength: (secondPred.winProb + secondGoalsPred.avgGoals * 20) / 2,
+          dimensions: ['下半场胜平负', '下半场总入球'],
+          insight: '下半场胜率高且入球多，球队习惯后程发力'
+        });
+      }
+      
+      // 信号4: 大球 + 双方入球高 协同
+      if (goalsPred.over25 > 60 && teamGoalsPred.avgGoals > 1.5 && oppGoalsPred.avgGoals > 1.2) {
+        signals.push({
+          type: 'synergy',
+          name: '对攻大战信号',
+          strength: (goalsPred.over25 + teamGoalsPred.avgGoals * 15 + oppGoalsPred.avgGoals * 15) / 3,
+          dimensions: ['全场总入球', '全场本队入球', '全场客队入球'],
+          insight: '双方进攻活跃，大球概率高'
+        });
+      }
+      
+      // 信号5: 上半场平/负 + 下半场胜 协同（逆转信号）
+      if ((firstPred.drawProb > 35 || firstPred.loseProb > 40) && secondPred.winProb > 55) {
+        signals.push({
+          type: 'synergy',
+          name: '逆转潜力信号',
+          strength: secondPred.winProb,
+          dimensions: ['上半场胜平负', '下半场胜平负'],
+          insight: '上半场可能落后/平局，但下半场逆转能力强'
+        });
+      }
+      
+      // 信号6: 本队上半场入球低 + 下半场入球高 协同
+      if (teamFirstGoalsPred.avgGoals < 0.8 && teamSecondGoalsPred.avgGoals > 1.2) {
+        signals.push({
+          type: 'synergy',
+          name: '慢热型进攻信号',
+          strength: teamSecondGoalsPred.avgGoals * 25,
+          dimensions: ['上半场本队入球', '下半场本队入球'],
+          insight: '上半场慢热，下半场进攻爆发'
+        });
+      }
+      
+      // ========== 维度间矛盾信号检测 ==========
+      
+      // 矛盾1: 全场胜率高 但 本队入球低
+      if (fullPred.winProb > 55 && teamGoalsPred.avgGoals < 1.2) {
+        conflicts.push({
+          type: 'conflict',
+          name: '胜率高但入球低',
+          severity: 'medium',
+          dimensions: ['全场胜平负', '全场本队入球'],
+          insight: '胜率虽高但入球能力不足，可能是防守型球队，小胜概率大',
+          alternative: '考虑小球或让球盘'
+        });
+      }
+      
+      // 矛盾2: 全场胜率高 但 下半场胜率低
+      if (fullPred.winProb > 55 && secondPred.winProb < 40) {
+        conflicts.push({
+          type: 'conflict',
+          name: '全场胜但下半场弱',
+          severity: 'high',
+          dimensions: ['全场胜平负', '下半场胜平负'],
+          insight: '上半场表现好但下半场容易崩盘，领先时需警惕',
+          alternative: '关注上半场投注或全场让球'
+        });
+      }
+      
+      // 矛盾3: 大球概率高 但 双方入球都低
+      if (goalsPred.over25 > 60 && teamGoalsPred.avgGoals < 1.3 && oppGoalsPred.avgGoals < 1.3) {
+        conflicts.push({
+          type: 'conflict',
+          name: '大球信号矛盾',
+          severity: 'high',
+          dimensions: ['全场总入球', '全场本队入球', '全场客队入球'],
+          insight: '大球概率高但双方入球能力都弱，数据可能失真',
+          alternative: '谨慎投注大球，考虑小球'
+        });
+      }
+      
+      // 矛盾4: 上半场胜率高 但 全场胜率低
+      if (firstPred.winProb > 55 && fullPred.winProb < 45) {
+        conflicts.push({
+          type: 'conflict',
+          name: '上半场强全场弱',
+          severity: 'high',
+          dimensions: ['上半场胜平负', '全场胜平负'],
+          insight: '上半场领先但全场容易输，后劲不足',
+          alternative: '投注上半场胜或半全场'
+        });
+      }
+      
+      // 矛盾5: 本队入球高 但 对手入球也高
+      if (teamGoalsPred.avgGoals > 1.8 && oppGoalsPred.avgGoals > 1.5) {
+        conflicts.push({
+          type: 'conflict',
+          name: '互攻型球队',
+          severity: 'low',
+          dimensions: ['全场本队入球', '全场客队入球'],
+          insight: '进攻强但防守弱，比赛结果难以预测',
+          alternative: '投注大球规避胜负风险'
+        });
+      }
+      
+      // ========== 多维特征组合分析 ==========
+      
+      // 组合1: 胜+大球+下半场发力
+      if (fullPred.winProb > 50 && goalsPred.over25 > 55 && secondPred.winProb > 50) {
+        recommendations.push({
+          type: '胜+大球组合',
+          confidence: (fullPred.winProb + goalsPred.over25 + secondPred.winProb) / 3,
+          reason: `全场胜率${fullPred.winProb.toFixed(0)}% + 大球${goalsPred.over25.toFixed(0)}% + 下半场胜${secondPred.winProb.toFixed(0)}%，三重信号确认`,
+          dimensions: ['全场胜平负', '全场总入球', '下半场胜平负'],
+          risk: 'medium',
+          strategy: '可双选胜+大球分散风险'
+        });
+      }
+      
+      // 组合2: 上半场落后风险 + 下半场逆转 + 大球
+      if (firstPred.loseProb > 35 && secondPred.winProb > 50 && goalsPred.over25 > 55) {
+        recommendations.push({
+          type: '逆转大球策略',
+          confidence: (secondPred.winProb + goalsPred.over25) / 2,
+          reason: `上半场可能落后(${firstPred.loseProb.toFixed(0)}%)，但下半场逆转能力强(${secondPred.winProb.toFixed(0)}%)，大球概率${goalsPred.over25.toFixed(0)}%`,
+          dimensions: ['上半场胜平负', '下半场胜平负', '全场总入球'],
+          risk: 'high',
+          strategy: '若上半场落后，投注大球或下半场入球更安全'
+        });
+      }
+      
+      // 组合3: 小胜策略（胜率高但入球少）
+      if (fullPred.winProb > 55 && teamGoalsPred.avgGoals < 1.5 && oppGoalsPred.avgGoals < 1) {
+        recommendations.push({
+          type: '小胜策略',
+          confidence: fullPred.winProb,
+          reason: `胜率${fullPred.winProb.toFixed(0)}%但场均入球仅${teamGoalsPred.avgGoals.toFixed(1)}，防守型小胜`,
+          dimensions: ['全场胜平负', '全场本队入球', '全场客队入球'],
+          risk: 'low',
+          strategy: '考虑让球盘或小球'
+        });
+      }
+      
+      // 组合4: 半全场策略
+      if (firstPred.drawProb > 35 && secondPred.winProb > 55) {
+        recommendations.push({
+          type: '半全场策略',
+          confidence: (firstPred.drawProb + secondPred.winProb) / 2,
+          reason: `上半场平局概率${firstPred.drawProb.toFixed(0)}%，下半场胜率${secondPred.winProb.toFixed(0)}%`,
+          dimensions: ['上半场胜平负', '下半场胜平负'],
+          risk: 'medium',
+          strategy: '考虑半全场：平-胜'
+        });
+      }
+      
+      // 组合5: 纯大球避险（胜负不确定但入球预期高）
+      if (fullPred.winProb < 50 && fullPred.loseProb < 45 && goalsPred.over25 > 60) {
+        recommendations.push({
+          type: '大球避险',
+          confidence: goalsPred.over25,
+          reason: `胜负不确定(胜${fullPred.winProb.toFixed(0)}%/负${fullPred.loseProb.toFixed(0)}%)，但大球概率${goalsPred.over25.toFixed(0)}%`,
+          dimensions: ['全场胜平负', '全场总入球'],
+          risk: 'low',
+          strategy: '投注大球规避胜负风险'
+        });
+      }
+      
+      // 组合6: 上半场入球策略
+      if (firstGoalsPred.avgGoals > 1.2 && teamFirstGoalsPred.avgGoals > 0.7) {
+        recommendations.push({
+          type: '上半场入球',
+          confidence: firstGoalsPred.avgGoals * 30,
+          reason: `上半场场均${firstGoalsPred.avgGoals.toFixed(1)}球，本队上半场入球${teamFirstGoalsPred.avgGoals.toFixed(1)}`,
+          dimensions: ['上半场总入球', '上半场本队入球'],
+          risk: 'medium',
+          strategy: '考虑上半场大球或首球投注'
+        });
+      }
+      
+      // 组合7: 下半场入球策略
+      if (secondGoalsPred.avgGoals > 1.5 && firstGoalsPred.avgGoals < 1) {
+        recommendations.push({
+          type: '下半场入球爆发',
+          confidence: secondGoalsPred.avgGoals * 25,
+          reason: `上半场仅${firstGoalsPred.avgGoals.toFixed(1)}球，下半场${secondGoalsPred.avgGoals.toFixed(1)}球`,
+          dimensions: ['上半场总入球', '下半场总入球'],
+          risk: 'medium',
+          strategy: '关注下半场大球或滚球投注'
+        });
+      }
+      
+      // 组合8: 客队入球策略
+      if (oppGoalsPred.avgGoals > 1.5 && oppSecondGoalsPred.avgGoals > 0.8) {
+        recommendations.push({
+          type: '客队入球机会',
+          confidence: oppGoalsPred.avgGoals * 25,
+          reason: `对手场均入球${oppGoalsPred.avgGoals.toFixed(1)}，下半场${oppSecondGoalsPred.avgGoals.toFixed(1)}球`,
+          dimensions: ['全场客队入球', '下半场客队入球'],
+          risk: 'high',
+          strategy: '考虑双方进球或客队入球盘'
+        });
+      }
+      
+      recommendations.sort((a, b) => b.confidence - a.confidence);
+      signals.sort((a, b) => b.strength - a.strength);
+      conflicts.sort((a, b) => a.severity === 'high' ? -1 : 1);
+      
+      return {
+        fullTime: fullPred,
+        firstHalf: firstPred,
+        secondHalf: secondPred,
+        goals: goalsPred,
+        firstHalfGoals: firstGoalsPred,
+        secondHalfGoals: secondGoalsPred,
+        teamGoals: teamGoalsPred,
+        teamFirstGoals: teamFirstGoalsPred,
+        teamSecondGoals: teamSecondGoalsPred,
+        opponentGoals: oppGoalsPred,
+        opponentFirstGoals: oppFirstGoalsPred,
+        opponentSecondGoals: oppSecondGoalsPred,
+        signals: signals.slice(0, 6),
+        conflicts: conflicts.slice(0, 4),
+        recommendations: recommendations.slice(0, 8)
+      };
+    }
+    
+    function runAnalysis(teamName, matches, opponentData) {
+      const analysis = analyzeMultiDimension(matches, selectedTeam.id);
+      const collision = collisionAnalysis(analysis);
+      const opponentModel = combineTeamAndOpponent(analysis, opponentData, selectedTeam.id);
+      const powerLineTrend = calculatePowerLineTrend(matches, selectedTeam.id);
+      
+      const matchDates = matches.map(m => m.utcDate);
+      const features = calculateMultiFeatures(analysis, matchDates, selectedTeam.id);
+      
+      renderMultiDimensionAnalysis({
+        teamName,
+        totalMatches: matches.length,
+        analysis,
+        collision,
+        opponentModel,
+        features,
+        opponentData,
+        powerLineTrend,
+        matchDates,
+        matches
+      });
+    }
+    
+    let currentOdds = { win: null, draw: null, lose: null };
+    
+    function setOdds() {
+      const winOdds = parseFloat(document.getElementById('winOddsInput').value);
+      const drawOdds = parseFloat(document.getElementById('drawOddsInput').value);
+      const loseOdds = parseFloat(document.getElementById('loseOddsInput').value);
+      
+      if (!isNaN(winOdds) && !isNaN(drawOdds) && !isNaN(loseOdds)) {
+        currentOdds = { win: winOdds, draw: drawOdds, lose: loseOdds };
+        
+        const winProb = (1 / winOdds) * 100;
+        const drawProb = (1 / drawOdds) * 100;
+        const loseProb = (1 / loseOdds) * 100;
+        const total = winProb + drawProb + loseProb;
+        
+        document.getElementById('oddsProbDisplay').innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
+            <div style="text-align: center; padding: 8px; background: rgba(0, 217, 126, 0.1); border-radius: 6px;">
+              <div style="font-size: 11px; color: var(--text-secondary);">主胜概率</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--accent-win);">${(winProb/total*100).toFixed(1)}%</div>
+            </div>
+            <div style="text-align: center; padding: 8px; background: rgba(245, 158, 11, 0.1); border-radius: 6px;">
+              <div style="font-size: 11px; color: var(--text-secondary);">平局概率</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--accent-draw);">${(drawProb/total*100).toFixed(1)}%</div>
+            </div>
+            <div style="text-align: center; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
+              <div style="font-size: 11px; color: var(--text-secondary);">客胜概率</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--accent-lose);">${(loseProb/total*100).toFixed(1)}%</div>
+            </div>
+          </div>
+        `;
+        
+        if (window.lastAnalysisData) {
+          updateOddsComparison(window.lastAnalysisData);
+        }
+      }
+    }
+    
+    function updateOddsComparison(data) {
+      const container = document.getElementById('oddsComparisonResult');
+      if (!container || !currentOdds.win || !data.powerLineTrend) return;
+      
+      const winProb = (1 / currentOdds.win) * 100;
+      const drawProb = (1 / currentOdds.draw) * 100;
+      const loseProb = (1 / currentOdds.lose) * 100;
+      const total = winProb + drawProb + loseProb;
+      
+      const normalizedWin = winProb / total * 100;
+      const normalizedDraw = drawProb / total * 100;
+      const normalizedLose = loseProb / total * 100;
+      
+      const powerIndex = data.powerLineTrend.recent3Avg;
+      let powerWinProb, powerDrawProb, powerLoseProb;
+      
+      if (powerIndex > 0.6) {
+        powerWinProb = 50 + (powerIndex - 0.5) * 100;
+        powerDrawProb = 25;
+        powerLoseProb = 25 - (powerIndex - 0.5) * 50;
+      } else if (powerIndex < 0.4) {
+        powerWinProb = 25 - (0.5 - powerIndex) * 50;
+        powerDrawProb = 25;
+        powerLoseProb = 50 + (0.5 - powerIndex) * 100;
+      } else {
+        powerWinProb = 35 + (powerIndex - 0.4) * 50;
+        powerDrawProb = 30;
+        powerLoseProb = 35 - (powerIndex - 0.4) * 50;
+      }
+      
+      powerWinProb = Math.max(10, Math.min(70, powerWinProb));
+      powerDrawProb = Math.max(15, Math.min(40, powerDrawProb));
+      powerLoseProb = Math.max(10, Math.min(70, powerLoseProb));
+      
+      const powerTotal = powerWinProb + powerDrawProb + powerLoseProb;
+      powerWinProb = powerWinProb / powerTotal * 100;
+      powerDrawProb = powerDrawProb / powerTotal * 100;
+      powerLoseProb = powerLoseProb / powerTotal * 100;
+      
+      const winDiff = powerWinProb - normalizedWin;
+      const drawDiff = powerDrawProb - normalizedDraw;
+      const loseDiff = powerLoseProb - normalizedLose;
+      
+      let divergence = 'NORMAL';
+      let divergenceDesc = '实力线与赔率基本一致';
+      let divergenceColor = 'var(--accent-draw)';
+      
+      if (winDiff > 10) {
+        divergence = 'GOLDEN_RESONANCE';
+        divergenceDesc = '黄金共振：实力线显示主胜概率高于赔率，存在价值投注机会';
+        divergenceColor = 'var(--accent-win)';
+      } else if (loseDiff > 10) {
+        divergence = 'VALUE_LOSE';
+        divergenceDesc = '实力线显示客胜概率高于赔率，可能存在冷门机会';
+        divergenceColor = 'var(--accent-blue)';
+      } else if (winDiff < -10) {
+        divergence = 'DEVIL_DIVERGENCE';
+        divergenceDesc = '魔鬼背离：赔率看好主胜但实力线不支撑，需谨慎';
+        divergenceColor = 'var(--accent-lose)';
+      }
+      
+      container.innerHTML = `
+        <div style="margin-top: 12px; background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--accent-blue);">📊 实力线 vs 赔率对比</div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">实力线预测</div>
+              <div style="display: flex; height: 24px; border-radius: 4px; overflow: hidden;">
+                <div style="width: ${powerWinProb}%; background: var(--accent-win);"></div>
+                <div style="width: ${powerDrawProb}%; background: var(--accent-draw);"></div>
+                <div style="width: ${powerLoseProb}%; background: var(--accent-lose);"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px; color: var(--text-muted);">
+                <span style="color: var(--accent-win);">${powerWinProb.toFixed(1)}%</span>
+                <span style="color: var(--accent-draw);">${powerDrawProb.toFixed(1)}%</span>
+                <span style="color: var(--accent-lose);">${powerLoseProb.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">赔率隐含概率</div>
+              <div style="display: flex; height: 24px; border-radius: 4px; overflow: hidden;">
+                <div style="width: ${normalizedWin}%; background: var(--accent-win);"></div>
+                <div style="width: ${normalizedDraw}%; background: var(--accent-draw);"></div>
+                <div style="width: ${normalizedLose}%; background: var(--accent-lose);"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 4px; color: var(--text-muted);">
+                <span style="color: var(--accent-win);">${normalizedWin.toFixed(1)}%</span>
+                <span style="color: var(--accent-draw);">${normalizedDraw.toFixed(1)}%</span>
+                <span style="color: var(--accent-lose);">${normalizedLose.toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.03); border-left: 3px solid ${divergenceColor};">
+            <div style="font-weight: 600; margin-bottom: 4px; color: ${divergenceColor};">
+              ${divergence === 'GOLDEN_RESONANCE' ? '✨ 黄金共振' : divergence === 'DEVIL_DIVERGENCE' ? '⚠️ 魔鬼背离' : divergence === 'VALUE_LOSE' ? '💎 价值冷门' : '➡️ 正常区间'}
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">${divergenceDesc}</div>
+          </div>
+          
+          <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">
+            差异: 主胜 ${winDiff > 0 ? '+' : ''}${winDiff.toFixed(1)}% | 平局 ${drawDiff > 0 ? '+' : ''}${drawDiff.toFixed(1)}% | 客胜 ${loseDiff > 0 ? '+' : ''}${loseDiff.toFixed(1)}%
+          </div>
+        </div>
+      `;
+    }
+    
+    function renderPowerLineBars(powerIndices) {
+      if (!powerIndices || powerIndices.length < 2) {
+        return '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 12px;">需要更多数据</div>';
+      }
+      
+      const n = powerIndices.length;
+      const barWidth = Math.max(8, Math.min(30, (100 - n * 2) / n));
+      const maxVal = 1;
+      
+      let bars = '';
+      for (let i = 0; i < n; i++) {
+        const val = powerIndices[i];
+        const heightPercent = (val / maxVal) * 100;
+        const color = val > 0.6 ? 'var(--accent-win)' : val < 0.4 ? 'var(--accent-lose)' : 'var(--accent-gold)';
+        const left = 30 + (i / (n - 1)) * 65;
+        
+        bars += `
+          <div style="position: absolute; bottom: 20px; left: ${left}%; width: ${barWidth}px; height: ${heightPercent}%; background: ${color}; border-radius: 2px 2px 0 0; transform: translateX(-50%); opacity: 0.8;" title="第${i+1}场: ${val.toFixed(3)}"></div>
+          <div style="position: absolute; bottom: 5px; left: ${left}%; transform: translateX(-50%); font-size: 8px; color: var(--text-muted);">${i+1}</div>
+        `;
+      }
+      
+      return `
+        <div style="position: absolute; left: 5px; top: 10px; font-size: 9px; color: var(--text-muted);">1.0</div>
+        <div style="position: absolute; left: 5px; top: 50%; font-size: 9px; color: var(--text-muted);">0.5</div>
+        <div style="position: absolute; left: 5px; bottom: 25px; font-size: 9px; color: var(--text-muted);">0.0</div>
+        <div style="position: absolute; left: 25px; right: 5px; top: 50%; height: 1px; background: #2d3a4a;"></div>
+        ${bars}
+      `;
+    }
+    
+    function renderMultiDimensionAnalysis(data) {
+      const container = document.getElementById('analysisContent');
+      window.lastAnalysisData = data;
+      const a = data.analysis;
+      const c = data.collision;
+      
+      container.innerHTML = `
+        <div class="analysis-header">
+          <div class="team-info">
+            <div class="team-badge">${data.teamName.substring(0, 2)}</div>
+            <div class="team-details">
+              <h3>${data.teamName}</h3>
+              <p>${leagueNames[currentLeague]} · ${data.totalMatches}场比赛</p>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--accent-blue);">💰 赔率输入（用于对比分析）</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">主胜赔率</label>
+              <input type="number" id="winOddsInput" step="0.01" placeholder="如2.10" style="width: 100%; padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">平局赔率</label>
+              <input type="number" id="drawOddsInput" step="0.01" placeholder="如3.40" style="width: 100%; padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">客胜赔率</label>
+              <input type="number" id="loseOddsInput" step="0.01" placeholder="如3.20" style="width: 100%; padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px;">
+            </div>
+          </div>
+          <button onclick="setOdds()" style="width: 100%; padding: 10px; background: var(--accent-blue); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">分析赔率对比</button>
+          <div id="oddsProbDisplay"></div>
+          <div id="oddsComparisonResult"></div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <div class="section-title">📊 全场胜平负分析</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value win">${a.fullTime.wins}</div>
+              <div class="stat-label">胜</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value draw">${a.fullTime.draws}</div>
+              <div class="stat-label">平</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value lose">${a.fullTime.losses}</div>
+              <div class="stat-label">负</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value gold">${c.fullTime.sum > 0 ? '+' : ''}${c.fullTime.sum}</div>
+              <div class="stat-label">近10场编码</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <div class="section-title">⏱️ 半场胜平负分析</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" style="color: var(--accent-blue);">上半场</div>
+              <div class="stat-label">${a.firstHalf.wins}胜${a.firstHalf.draws}平${a.firstHalf.losses}负</div>
+              <div style="font-size: 12px; color: var(--text-muted);">编码和: ${c.firstHalf.sum > 0 ? '+' : ''}${c.firstHalf.sum}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color: var(--accent-gold);">下半场</div>
+              <div class="stat-label">${a.secondHalf.wins}胜${a.secondHalf.draws}平${a.secondHalf.losses}负</div>
+              <div style="font-size: 12px; color: var(--text-muted);">编码和: ${c.secondHalf.sum > 0 ? '+' : ''}${c.secondHalf.sum}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <div class="section-title">⚽ 入球数分析</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value gold">${c.goals.avgGoals.toFixed(1)}</div>
+              <div class="stat-label">场均总入球</div>
+              <div style="font-size: 11px; color: var(--text-muted);">预测: ${c.goals.predictedRange}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color: ${c.goals.over25 > 60 ? 'var(--accent-win)' : 'var(--text-secondary)'};">${c.goals.over25.toFixed(0)}%</div>
+              <div class="stat-label">大球(2.5)概率</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color: ${c.goals.over35 > 50 ? 'var(--accent-win)' : 'var(--text-secondary)'};">${c.goals.over35.toFixed(0)}%</div>
+              <div class="stat-label">大球(3.5)概率</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color: var(--accent-blue);">${c.goals.over45.toFixed(0)}%</div>
+              <div class="stat-label">大球(4.5)概率</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+            <div class="stat-card">
+              <div style="font-size: 12px; color: var(--text-secondary);">上半场场均</div>
+              <div style="font-size: 18px; font-weight: 700;">${c.firstHalfGoals.avgGoals.toFixed(1)}球</div>
+            </div>
+            <div class="stat-card">
+              <div style="font-size: 12px; color: var(--text-secondary);">下半场场均</div>
+              <div style="font-size: 18px; font-weight: 700;">${c.secondHalfGoals.avgGoals.toFixed(1)}球</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <div class="section-title">🎯 球队入球分析</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 13px; color: var(--accent-win); margin-bottom: 8px;">本队入球</div>
+              <div style="display: flex; justify-content: space-between; text-align: center;">
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${c.teamGoals.avgGoals.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">全场</div>
+                </div>
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${a.homeTeamGoals.first.avg.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">上半场</div>
+                </div>
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${a.homeTeamGoals.second.avg.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">下半场</div>
+                </div>
+              </div>
+            </div>
+            <div style="background: var(--bg-secondary); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 13px; color: var(--accent-lose); margin-bottom: 8px;">对手入球</div>
+              <div style="display: flex; justify-content: space-between; text-align: center;">
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${c.opponentGoals.avgGoals.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">全场</div>
+                </div>
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${a.awayTeamGoals.first.avg.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">上半场</div>
+                </div>
+                <div>
+                  <div style="font-size: 16px; font-weight: 700;">${a.awayTeamGoals.second.avg.toFixed(1)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">下半场</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="encoding-section">
+          <div class="encoding-title">📝 全场编码序列 (最近15场) - 主客场分离编码法</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+            主场胜+3 | 客场胜+4 | 主场平+1 | 客场平+2 | 主场负-1 | 客场负0
+          </div>
+          <div class="encoding-sequence">
+            ${a.fullTime.encodings.slice(-15).map(e => {
+              let cls = 'encode-zero';
+              if (e > 0) cls = 'encode-pos';
+              else if (e < 0) cls = 'encode-neg';
+              return `<span class="encode-val ${cls}" title="${ENCODING_LABELS[e] || ''}">${e > 0 ? '+' : ''}${e}</span>`;
+            }).join('')}
+          </div>
+        </div>
+        
+        <div class="prediction-panel">
+          <div class="prediction-title">🎯 全场胜平负预测</div>
+          <div class="prediction-bars">
+            <div class="prediction-item">
+              <div class="prediction-label" style="color: var(--accent-win);">胜</div>
+              <div class="prediction-bar-container">
+                <div class="prediction-bar-fill bar-win" style="width: ${c.fullTime.winProb}%">${c.fullTime.winProb.toFixed(1)}%</div>
+              </div>
+            </div>
+            <div class="prediction-item">
+              <div class="prediction-label" style="color: var(--accent-draw);">平</div>
+              <div class="prediction-bar-container">
+                <div class="prediction-bar-fill bar-draw" style="width: ${c.fullTime.drawProb}%">${c.fullTime.drawProb.toFixed(1)}%</div>
+              </div>
+            </div>
+            <div class="prediction-item">
+              <div class="prediction-label" style="color: var(--accent-lose);">负</div>
+              <div class="prediction-bar-container">
+                <div class="prediction-bar-fill bar-lose" style="width: ${c.fullTime.loseProb}%">${c.fullTime.loseProb.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        ${data.opponentModel ? `
+        <div style="margin-top: 16px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            ⚔️ 对手建模分析
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 12px; color: var(--text-secondary);">对手平均胜率</div>
+              <div style="font-size: 20px; font-weight: 700; color: ${data.opponentModel.avgOppWinRate > 50 ? 'var(--accent-lose)' : 'var(--accent-win)'};">${data.opponentModel.avgOppWinRate.toFixed(1)}%</div>
+            </div>
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 12px; color: var(--text-secondary);">对手强度</div>
+              <div style="font-size: 16px; font-weight: 700; color: ${data.opponentModel.opponentStrength === 'strong' ? 'var(--accent-lose)' : data.opponentModel.opponentStrength === 'weak' ? 'var(--accent-win)' : 'var(--accent-draw)'};">
+                ${data.opponentModel.opponentStrength === 'strong' ? '💪 强队' : data.opponentModel.opponentStrength === 'weak' ? '📉 弱队' : '⚖️ 中等'}
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">综合胜率预测</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="font-size: 24px; font-weight: 700; color: ${data.opponentModel.adjustedProb > 50 ? 'var(--accent-win)' : 'var(--text-secondary)'};">${data.opponentModel.adjustedProb.toFixed(1)}%</div>
+              <div style="font-size: 12px; color: var(--text-muted);">基于对手建模调整</div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+        
+        ${data.features ? `
+        <div style="margin-top: 16px; background: var(--bg-secondary); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📊 多指标综合评分</div>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+            <div style="text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">状态</div>
+              <div style="font-size: 16px; font-weight: 700; color: ${data.features.form > 0 ? 'var(--accent-win)' : 'var(--accent-lose)'};">${data.features.form.toFixed(1)}</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">进球差</div>
+              <div style="font-size: 16px; font-weight: 700; color: ${data.features.goalDiff > 0 ? 'var(--accent-win)' : 'var(--accent-lose)'};">${data.features.goalDiff > 0 ? '+' : ''}${data.features.goalDiff.toFixed(1)}</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">大球率</div>
+              <div style="font-size: 16px; font-weight: 700;">${data.features.over25Rate.toFixed(0)}%</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">主场优势</div>
+              <div style="font-size: 16px; font-weight: 700;">${data.features.homeAdvantage.toFixed(0)}%</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">稳定性</div>
+              <div style="font-size: 16px; font-weight: 700;">${data.features.consistency.toFixed(0)}%</div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+        
+        ${data.powerLineTrend ? `
+        <div style="margin-top: 16px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            📈 分时实力线分析
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">平均实力系数</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--accent-gold);">${data.powerLineTrend.avgPower.toFixed(3)}</div>
+            </div>
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">近3场均值</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--accent-blue);">${data.powerLineTrend.recent3Avg.toFixed(3)}</div>
+            </div>
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">趋势方向</div>
+              <div style="font-size: 16px; font-weight: 700; color: ${data.powerLineTrend.trend === 'rising' ? 'var(--accent-win)' : data.powerLineTrend.trend === 'falling' ? 'var(--accent-lose)' : 'var(--accent-draw)'};">
+                ${data.powerLineTrend.trend === 'rising' ? '↑ 上升' : data.powerLineTrend.trend === 'falling' ? '↓ 下降' : '→ 平稳'}
+              </div>
+            </div>
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+              <div style="font-size: 11px; color: var(--text-secondary);">信号</div>
+              <div style="font-size: 14px; font-weight: 700; color: ${data.powerLineTrend.signal === 'STRONG_BUY' ? 'var(--accent-win)' : data.powerLineTrend.signal === 'STRONG_SELL' ? 'var(--accent-lose)' : data.powerLineTrend.signal === 'VALUE_BUY' ? 'var(--accent-blue)' : 'var(--accent-draw)'};">
+                ${data.powerLineTrend.signal === 'STRONG_BUY' ? '强势买入' : data.powerLineTrend.signal === 'STRONG_SELL' ? '强势卖出' : data.powerLineTrend.signal === 'VALUE_BUY' ? '价值买入' : '持有观望'}
+              </div>
+            </div>
+          </div>
+          
+          <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--accent-gold);">📊 实力线走势图</div>
+            <div id="powerLineChartContainer" style="width: 100%; height: 150px; position: relative; background: #1a2332; border-radius: 6px;">
+              ${renderPowerLineBars(data.powerLineTrend.powerIndices)}
+            </div>
+          </div>
+          
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+            💡 ${data.powerLineTrend.signalDesc}
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);">
+            实力系数 = (胜平负编码 + 大小球加权值 + 进球数) / 3，取小数部分
+          </div>
+        </div>
+        ` : ''}
+        
+        ${c.signals && c.signals.length > 0 ? `
+        <div style="margin-top: 16px; background: linear-gradient(135deg, rgba(0, 217, 126, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            🔗 维度协同信号
+          </div>
+          ${c.signals.map(sig => `
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-win);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 600; color: var(--accent-win);">${sig.name}</span>
+                <span style="font-size: 12px; padding: 2px 8px; background: rgba(0, 217, 126, 0.2); color: var(--accent-win); border-radius: 4px;">强度 ${sig.strength.toFixed(0)}%</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">${sig.insight}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">涉及维度: ${sig.dimensions.join(' + ')}</div>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+        
+        ${c.conflicts && c.conflicts.length > 0 ? `
+        <div style="margin-top: 16px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            ⚠️ 维度矛盾信号
+          </div>
+          ${c.conflicts.map(conf => `
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid ${conf.severity === 'high' ? 'var(--accent-lose)' : conf.severity === 'medium' ? 'var(--accent-draw)' : 'var(--accent-win)'};">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 600; color: ${conf.severity === 'high' ? 'var(--accent-lose)' : 'var(--accent-draw)'};">${conf.name}</span>
+                <span style="font-size: 11px; padding: 2px 6px; background: ${conf.severity === 'high' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${conf.severity === 'high' ? 'var(--accent-lose)' : 'var(--accent-draw)'}; border-radius: 4px;">${conf.severity === 'high' ? '高风险' : conf.severity === 'medium' ? '中风险' : '低风险'}</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">${conf.insight}</div>
+              <div style="font-size: 11px; color: var(--accent-gold);">💡 建议: ${conf.alternative}</div>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+        
+        <div style="margin-top: 16px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            💡 智能投注建议
+          </div>
+          ${c.recommendations.length > 0 ? c.recommendations.map(rec => `
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 600; color: var(--accent-gold);">${rec.type}</span>
+                <span style="font-size: 12px; padding: 2px 8px; background: var(--accent-win); color: #000; border-radius: 4px;">置信度 ${rec.confidence.toFixed(0)}%</span>
+              </div>
+              <div style="font-size: 13px; color: var(--text-secondary);">${rec.reason}</div>
+            </div>
+          `).join('') : '<div style="text-align: center; color: var(--text-muted);">暂无明确建议</div>'}
+        </div>
+        
+        ${(() => {
+          const encodings = a.fullTime.encodings;
+          const results = encodings.map(e => e >= 3 ? 1 : (e === 1 || e === 2) ? 2 : 3);
+          const backtest = runBacktest(encodings, results);
+          const confidence = calculateConfidenceScore(data.features, data.opponentModel);
+          
+          return `
+          <div style="margin-top: 16px; background: var(--bg-secondary); border-radius: 12px; padding: 16px;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📈 回测验证 & 置信度</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 12px; color: var(--text-secondary);">历史预测准确率</div>
+                <div style="font-size: 24px; font-weight: 700; color: ${backtest.accuracy > 50 ? 'var(--accent-win)' : 'var(--accent-lose)'};">${backtest.accuracy.toFixed(1)}%</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${backtest.correctCount}/${backtest.totalPredictions}场正确</div>
+              </div>
+              <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 12px; color: var(--text-secondary);">综合置信度</div>
+                <div style="font-size: 24px; font-weight: 700; color: ${confidence.level === 'high' ? 'var(--accent-win)' : confidence.level === 'medium' ? 'var(--accent-draw)' : 'var(--accent-lose)'};">${confidence.score}%</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${confidence.level === 'high' ? '高置信度' : confidence.level === 'medium' ? '中等置信度' : '低置信度'}</div>
+              </div>
+            </div>
+            ${confidence.factors.length > 0 ? `
+            <div style="margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+              <strong>评分因素：</strong>${confidence.factors.join(' | ')}
+            </div>
+            ` : ''}
+          </div>
+          `;
+        })()}
+      `;
+      
+      updateAIPanelMulti(data);
+    }
+    
+    function updateAIPanelMulti(data) {
+      const container = document.getElementById('aiResponse');
+      const a = data.analysis;
+      const c = data.collision;
+      
+      container.innerHTML = `
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 600; margin-bottom: 12px;">📊 ${data.teamName} 多维度分析摘要</div>
+          <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+            <p>• 全场战绩: <strong style="color: var(--accent-win);">${a.fullTime.wins}胜</strong> <strong style="color: var(--accent-draw);">${a.fullTime.draws}平</strong> <strong style="color: var(--accent-lose);">${a.fullTime.losses}负</strong></p>
+            <p>• 上半场战绩: <strong>${a.firstHalf.wins}胜${a.firstHalf.draws}平${a.firstHalf.losses}负</strong></p>
+            <p>• 下半场战绩: <strong>${a.secondHalf.wins}胜${a.secondHalf.draws}平${a.secondHalf.losses}负</strong></p>
+            <p>• 场均入球: <strong style="color: var(--accent-gold);">${c.goals.avgGoals.toFixed(1)}球</strong></p>
+            <p>• 本队场均: <strong>${c.teamGoals.avgGoals.toFixed(1)}球</strong> | 对手场均: <strong>${c.opponentGoals.avgGoals.toFixed(1)}球</strong></p>
+          </div>
+        </div>
+        <div style="background: linear-gradient(135deg, rgba(0, 217, 126, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border-radius: 8px; padding: 16px;">
+          <div style="font-weight: 600; margin-bottom: 8px;">🎯 综合预测结论</div>
+          <div style="font-size: 14px; line-height: 1.8;">
+            <p>• 全场胜率: <strong style="color: ${c.fullTime.winProb > 50 ? 'var(--accent-win)' : 'var(--text-secondary)'};">${c.fullTime.winProb.toFixed(1)}%</strong></p>
+            <p>• 大球(2.5)概率: <strong style="color: ${c.goals.over25 > 55 ? 'var(--accent-win)' : 'var(--text-secondary)'};">${c.goals.over25.toFixed(1)}%</strong></p>
+            <p>• 预测入球范围: <strong style="color: var(--accent-gold);">${c.goals.predictedRange}</strong></p>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function loadMatches() {
+      try {
+        const today = new Date();
+        const dateFrom = new Date(today);
+        dateFrom.setDate(dateFrom.getDate() - 7);
+        const dateTo = new Date(today);
+        dateTo.setDate(dateTo.getDate() + 7);
+        
+        const fromStr = dateFrom.toISOString().split('T')[0];
+        const toStr = dateTo.toISOString().split('T')[0];
+        
+        const data = await fetchAPI(`competitions/${currentLeague}/matches?dateFrom=${fromStr}&dateTo=${toStr}`);
+        const matches = data.matches || [];
+        
+        const live = matches.filter(m => m.status === 'IN_PLAY' || m.status === 'LIVE');
+        const upcoming = matches.filter(m => m.status === 'SCHEDULED' || m.status === 'TIMED');
+        const finished = matches.filter(m => m.status === 'FINISHED');
+        
+        renderMatches('liveMatches', live, 'live');
+        renderMatches('upcomingMatches', upcoming.slice(0, 10), 'upcoming');
+        renderMatches('finishedMatches', finished.slice(-10).reverse(), 'finished');
+        
+      } catch (error) {
+        console.error('Failed to load matches:', error);
+        ['liveMatches', 'upcomingMatches', 'finishedMatches'].forEach(id => {
+          document.getElementById(id).innerHTML = `
+            <div class="empty-state">
+              <div class="icon">❌</div>
+              <p>加载失败</p>
+            </div>
+          `;
+        });
+      }
+    }
+    
+    function renderMatches(containerId, matches, type) {
+      const container = document.getElementById(containerId);
+      
+      if (matches.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚽</div>
+            <p>暂无${type === 'live' ? '进行中的' : type === 'upcoming' ? '即将开始的' : '已完赛的'}比赛</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = matches.map(match => {
+        const homeTeam = getTeamNameCN(match.homeTeam.name);
+        const awayTeam = getTeamNameCN(match.awayTeam.name);
+        const homeScore = match.score.fullTime.home;
+        const awayScore = match.score.fullTime.away;
+        const matchTime = type === 'live' ? formatMatchTime(match.utcDate) : 
+                         type === 'upcoming' ? formatMatchTime(match.utcDate) : formatDate(match.utcDate);
+        
+        return `
+          <div class="match-item" onclick="showMatchAnalysis(${match.id})">
+            <div class="match-time">${matchTime}</div>
+            <div class="match-teams">
+              <div class="team-name">${homeTeam}</div>
+              <div class="match-score">
+                ${type === 'upcoming' ? '<span style="color: var(--text-muted);">VS</span>' : 
+                  `<span class="score-value ${type === 'live' ? 'score-live' : ''}">${homeScore}</span>
+                   <span>:</span>
+                   <span class="score-value ${type === 'live' ? 'score-live' : ''}">${awayScore}</span>`}
+              </div>
+              <div class="team-name">${awayTeam}</div>
+            </div>
+            ${type === 'live' ? '<span class="match-status status-live">进行中</span>' : ''}
+            ${type === 'upcoming' ? '<span class="match-status status-upcoming">未开始</span>' : ''}
+            ${type === 'finished' ? '<span class="match-status status-finished">完赛</span>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    async function loadStandings() {
+      try {
+        const data = await fetchAPI(`competitions/${currentLeague}/standings?season=${currentSeason}`);
+        const table = data.standings?.[0]?.table || [];
+        
+        const tbody = document.getElementById('standingsBody');
+        tbody.innerHTML = table.map((row, index) => {
+          const rankClass = index < 3 ? `rank-${index + 1}` : '';
+          return `
+            <tr>
+              <td class="standings-rank ${rankClass}">${row.position}</td>
+              <td>
+                <div class="standings-team">
+                  <div class="team-logo"></div>
+                  <span>${getTeamNameCN(row.team.name)}</span>
+                </div>
+              </td>
+              <td class="standings-stats">${row.playedGames}</td>
+              <td class="standings-stats">${row.won}</td>
+              <td class="standings-stats">${row.draw}</td>
+              <td class="standings-stats">${row.lost}</td>
+              <td class="standings-stats" style="font-weight: 700; color: var(--accent-gold);">${row.points}</td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Failed to load standings:', error);
+        document.getElementById('standingsBody').innerHTML = `
+          <tr>
+            <td colspan="7" class="empty-state">
+              <div class="icon">❌</div>
+              <p>加载积分榜失败</p>
+            </td>
+          </tr>
+        `;
+      }
+    }
+    
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+      
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(`${tabName}Tab`).classList.add('active');
+      
+      if (tabName === 'analysis') {
+        loadTeams();
+      } else if (tabName === 'standings') {
+        loadStandings();
+      }
+    }
+    
+    function switchLeague(league) {
+      currentLeague = league;
+      document.querySelectorAll('.league-chip').forEach(chip => chip.classList.remove('active'));
+      document.querySelector(`[data-league="${league}"]`).classList.add('active');
+      
+      loadMatches();
+      
+      const activeTab = document.querySelector('.tab-content.active').id.replace('Tab', '');
+      if (activeTab === 'analysis') {
+        loadTeams();
+      } else if (activeTab === 'standings') {
+        loadStandings();
+      }
+    }
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    
+    document.querySelectorAll('.league-chip').forEach(chip => {
+      chip.addEventListener('click', () => switchLeague(chip.dataset.league));
+    });
+    
+    document.getElementById('aiSendBtn').addEventListener('click', () => {
+      const input = document.getElementById('aiInput');
+      if (input.value.trim()) {
+        showToast('AI功能需要配置API密钥', 'info');
+        input.value = '';
+      }
+    });
+    
+    document.getElementById('aiInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('aiSendBtn').click();
+      }
+    });
+    
+    function runBacktest(encodings, results) {
+      if (encodings.length < 6) {
+        return { accuracy: 0, predictions: [], message: '数据不足，至少需要6场比赛' };
+      }
+      
+      let correctCount = 0;
+      const predictions = [];
+      
+      for (let i = 5; i < encodings.length; i++) {
+        const historicalEnc = encodings.slice(0, i);
+        const last5Avg = historicalEnc.slice(-5).reduce((a, b) => a + b, 0) / 5;
+        
+        let predicted;
+        if (last5Avg > 1) predicted = 1;
+        else if (last5Avg < 0) predicted = 3;
+        else predicted = 2;
+        
+        const actual = results[i];
+        const isCorrect = predicted === actual;
+        if (isCorrect) correctCount++;
+        
+        predictions.push({
+          index: i + 1,
+          avgEncoding: last5Avg.toFixed(2),
+          predicted,
+          actual,
+          isCorrect
+        });
+      }
+      
+      const accuracy = predictions.length > 0 ? (correctCount / predictions.length * 100) : 0;
+      
+      return {
+        accuracy,
+        correctCount,
+        totalPredictions: predictions.length,
+        predictions: predictions.slice(-10),
+        message: `准确率: ${accuracy.toFixed(1)}% (${correctCount}/${predictions.length})`
+      };
+    }
+    
+    function calculateConfidenceScore(features, opponentModel) {
+      let score = 50;
+      const factors = [];
+      
+      if (features.form > 1) {
+        score += 15;
+        factors.push('状态良好');
+      } else if (features.form < -1) {
+        score -= 15;
+        factors.push('状态低迷');
+      }
+      
+      if (features.consistency > 70) {
+        score += 10;
+        factors.push('发挥稳定');
+      } else if (features.consistency < 40) {
+        score -= 10;
+        factors.push('波动较大');
+      }
+      
+      if (opponentModel) {
+        if (opponentModel.opponentStrength === 'weak') {
+          score += 10;
+          factors.push('对手较弱');
+        } else if (opponentModel.opponentStrength === 'strong') {
+          score -= 10;
+          factors.push('对手较强');
+        }
+      }
+      
+      if (features.over25Rate > 60) {
+        factors.push('大球倾向');
+      }
+      
+      if (features.homeAdvantage > 60) {
+        score += 5;
+        factors.push('主场优势');
+      }
+      
+      return {
+        score: Math.max(10, Math.min(90, score)),
+        level: score >= 70 ? 'high' : score >= 50 ? 'medium' : 'low',
+        factors
+      };
+    }
+    
+    function init() {
+      loadMatches();
+      loadTeams();
+    }
+    
+    init();
+  </script>
+</body>
+</html>
